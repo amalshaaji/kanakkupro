@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Customers | KankkuPro{% endblock %}
+
+{% block breadcrumbs %}{% include "partials/breadcrumbs.html" with current_page="Customers" %}{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+  {% include "partials/page_heading.html" with eyebrow=request.tenant.name heading="Customers" description="Keep customer contact and billing details together." %}
+  {% if can_manage_customers %}
+    <a class="btn btn-primary" href="{% url 'customers:create' %}">Add customer</a>
+  {% endif %}
+</div>
+
+<section class="card mb-6 border border-base-300 bg-base-100 shadow-sm" aria-label="Filter customers">
+  <div class="card-body p-4">
+    <form method="get" class="grid gap-3 sm:grid-cols-[minmax(12rem,1fr)_12rem_auto] sm:items-end">
+      <div class="form-control gap-1">
+        <label class="label" for="customer-search"><span class="label-text font-medium">Search</span></label>
+        <input class="input input-bordered w-full" id="customer-search" name="q" type="search" value="{{ search }}" placeholder="Name, company, email, or phone">
+      </div>
+      <div class="form-control gap-1">
+        <label class="label" for="customer-status"><span class="label-text font-medium">Status</span></label>
+        <select class="select select-bordered w-full" id="customer-status" name="status">
+          <option value="active" {% if status_filter == "active" %}selected{% endif %}>Active</option>
+          <option value="inactive" {% if status_filter == "inactive" %}selected{% endif %}>Archived</option>
+          <option value="all" {% if status_filter == "all" %}selected{% endif %}>All customers</option>
+        </select>
+      </div>
+      <button class="btn btn-outline" type="submit">Apply filters</button>
+    </form>
+  </div>
+</section>
+
+<section aria-label="Customer results">
+  <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+    <p class="text-sm text-base-content/70">{{ page_obj.paginator.count }} customer{{ page_obj.paginator.count|pluralize }}</p>
+    {% if search or status_filter != "active" %}<a class="link link-primary text-sm" href="{% url 'customers:list' %}">Clear filters</a>{% endif %}
+  </div>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table table-zebra">
+      <thead><tr><th scope="col">Customer</th><th scope="col">Email</th><th scope="col">Phone</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+      <tbody>
+        {% for customer in page_obj %}
+          <tr>
+            <th scope="row"><a class="link link-hover font-semibold" href="{% url 'customers:detail' customer.id %}">{{ customer }}</a>{% if customer.company_name and customer.company_name != customer.name %}<div class="text-sm font-normal text-base-content/60">{{ customer.name }}</div>{% endif %}</th>
+            <td>{{ customer.email|default:"—" }}</td>
+            <td>{{ customer.phone|default:"—" }}</td>
+            <td><span class="badge {% if customer.status == 'active' %}badge-success badge-outline{% else %}badge-ghost{% endif %}">{{ customer.get_status_display }}</span></td>
+            <td><a class="btn btn-ghost btn-sm" href="{% url 'customers:detail' customer.id %}">View<span class="sr-only"> {{ customer }}</span></a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="py-12 text-center">
+            <p class="font-semibold">{% if search or status_filter != "active" %}No customers match these filters.{% else %}No customers yet.{% endif %}</p>
+            <p class="mt-1 text-sm text-base-content/60">{% if search or status_filter != "active" %}Try a different search or status.{% else %}Add a customer to keep their contact and billing details in one place.{% endif %}</p>
+            {% if can_manage_customers and not search and status_filter == "active" %}<a class="btn btn-primary btn-sm mt-4" href="{% url 'customers:create' %}">Add first customer</a>{% endif %}
+          </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if page_obj.has_other_pages %}
+    <nav class="mt-4 flex items-center justify-between gap-4" aria-label="Customer pages">
+      {% if page_obj.has_previous %}<a class="btn btn-outline btn-sm" href="?q={{ search|urlencode }}&amp;status={{ status_filter|urlencode }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>{% else %}<span></span>{% endif %}
+      <p class="text-sm text-base-content/70">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</p>
+      {% if page_obj.has_next %}<a class="btn btn-outline btn-sm" href="?q={{ search|urlencode }}&amp;status={{ status_filter|urlencode }}&amp;page={{ page_obj.next_page_number }}">Next</a>{% else %}<span></span>{% endif %}
+    </nav>
+  {% endif %}
+</section>
+{% endblock %}

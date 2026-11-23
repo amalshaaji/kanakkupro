@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer }} | Customers | KankkuPro{% endblock %}
+
+{% block breadcrumbs %}<nav class="breadcrumbs mb-6 text-sm" aria-label="Breadcrumb"><ol><li><a href="{% url 'dashboard:index' %}">Workspace</a></li><li><a href="{% url 'customers:list' %}">Customers</a></li><li aria-current="page">{{ customer }}</li></ol></nav>{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex flex-wrap items-start justify-between gap-4">
+  <div class="min-w-0">
+    <span class="badge {% if customer.status == 'active' %}badge-success badge-outline{% else %}badge-ghost{% endif %}">{{ customer.get_status_display }}</span>
+    {% include "partials/page_heading.html" with heading=customer.name description=customer.company_name %}
+  </div>
+  {% if can_manage_customers %}
+    <div class="flex flex-wrap gap-2">
+      <a class="btn btn-outline btn-sm" href="{% url 'customers:update' customer.id %}">Edit</a>
+      {% if customer.status == "active" %}
+        <form method="post" action="{% url 'customers:set_status' customer.id 'inactive' %}">{% csrf_token %}<button class="btn btn-ghost btn-sm text-error" type="submit">Archive</button></form>
+      {% else %}
+        <form method="post" action="{% url 'customers:set_status' customer.id 'active' %}">{% csrf_token %}<button class="btn btn-outline btn-sm" type="submit">Restore</button></form>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<section class="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(16rem,0.8fr)]" aria-label="Customer details">
+  <article class="card border border-base-300 bg-base-100 shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title">Contact and billing</h2>
+      <dl class="mt-2 grid gap-4 sm:grid-cols-2">
+        <div><dt class="text-sm text-base-content/60">Email</dt><dd class="mt-1 break-words">{% if customer.email %}<a class="link link-primary" href="mailto:{{ customer.email }}">{{ customer.email }}</a>{% else %}Not provided{% endif %}</dd></div>
+        <div><dt class="text-sm text-base-content/60">Phone</dt><dd class="mt-1">{% if customer.phone %}<a class="link link-primary" href="tel:{{ customer.phone }}">{{ customer.phone }}</a>{% else %}Not provided{% endif %}</dd></div>
+        <div class="sm:col-span-2"><dt class="text-sm text-base-content/60">Billing address</dt><dd class="mt-1 whitespace-pre-line">{% if customer.billing_address %}{{ customer.billing_address }}{% else %}Not provided{% endif %}</dd></div>
+        <div><dt class="text-sm text-base-content/60">Country</dt><dd class="mt-1">{{ customer.country|default:"Not provided" }}</dd></div>
+      </dl>
+    </div>
+  </article>
+  <article class="card border border-base-300 bg-base-100 shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title">Invoice history</h2>
+      <p class="text-sm leading-6 text-base-content/70">Invoice history will appear here when sales invoicing is available.</p>
+      <p class="text-xs text-base-content/60">Customer details shown on issued invoices will be preserved as a billing snapshot.</p>
+    </div>
+  </article>
+</section>
+{% endblock %}

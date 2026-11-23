@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
+from apps.customers.models import Customer
 from apps.tenants.permissions import membership_has_permission
 
 
@@ -18,6 +19,9 @@ def dashboard(request):
         {
             "can_manage_team": membership_has_permission(
                 request.tenant_membership, "team.manage"
-            )
+            ),
+            "customer_count": Customer.objects.filter(
+                tenant=request.tenant, status=Customer.Status.ACTIVE
+            ).count(),
         },
     )

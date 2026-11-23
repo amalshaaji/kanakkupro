@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "allauth.account",
     "apps.accounts.apps.AccountsConfig",
     "apps.tenants.apps.TenantsConfig",
+    "apps.customers.apps.CustomersConfig",
     "apps.dashboard.apps.DashboardConfig",
 ]
 

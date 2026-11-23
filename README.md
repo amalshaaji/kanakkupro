@@ -1,6 +1,6 @@
 # KankkuPro ERP
 
-KankkuPro is a multi-tenant business workspace built as a Django modular monolith. The repository contains the project foundation, email identity flows, tenant onboarding and team invitations, and the shared responsive UI shell. Business records and financial workflows are planned phases.
+KankkuPro is a multi-tenant business workspace built as a Django modular monolith. The repository contains the project foundation, email identity flows, tenant onboarding and team invitations, a shared responsive UI shell, and tenant-scoped customer management. Financial workflows are planned phases.
 
 ## Requirements
 
@@ -76,4 +76,4 @@ Set `DJANGO_SETTINGS_MODULE=config.settings.production` in the deployment enviro
 
 ## Implemented phases
 
-Phases 1–4 are implemented across `accounts`, `tenants`, and `dashboard`. The shared UI uses Django templates, HTMX, Tailwind CSS v4, and DaisyUI 5, with a responsive workspace shell and accessible form feedback. Tenant setup leaves country and currency optional because the launch market and financial policy have not been selected. The active tenant is stored in the session but resolved from a current active membership on each request. Tenant creation and owner membership commit atomically. Owner and Admin roles can invite members; invitation links are hashed at rest, bound to the invited verified email, expire after seven days by default, and require a CSRF-protected POST to accept. Customer, catalog, invoice, payment, subscription, inventory, and production monitoring features remain later phases.
+Phases 1–4 are implemented across `accounts`, `tenants`, and `dashboard`; Phase 5 customer management is implemented in `customers`. Customer records support tenant-scoped search, pagination, billing contact details, role-checked editing, and reversible archive/restore. The UI uses Django templates, HTMX, Tailwind CSS v4, and DaisyUI 5, with a responsive workspace shell and accessible form feedback. Tenant setup leaves country and currency optional because the launch market and financial policy have not been selected. The active tenant is stored in the session but resolved from a current active membership on each request. Tenant creation and owner membership commit atomically. Owner and Admin roles can invite members; invitation links are hashed at rest, bound to the invited verified email, expire after seven days by default, and require a CSRF-protected POST to accept. Catalog prices and tax treatment, invoices, payments, PDFs, and financial reporting await decisions on currency precision, tax rules, invoice numbering, and correction policies. Subscription billing, inventory, and production monitoring remain later phases.

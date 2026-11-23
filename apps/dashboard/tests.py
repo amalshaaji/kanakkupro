@@ -38,6 +38,8 @@ class DashboardAccessTests(TestCase):
         self.assertContains(response, 'href="#main-content">Skip to main content')
         self.assertContains(response, 'aria-label="Workspace navigation"')
         self.assertContains(response, 'aria-label="Breadcrumb"')
+        self.assertContains(response, "Active customers")
+        self.assertContains(response, "View customers")
 
     def test_authenticated_user_without_business_is_sent_to_setup(self):
         get_user_model().objects.create_user(

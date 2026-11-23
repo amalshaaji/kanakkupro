@@ -7,7 +7,7 @@
 {% block content %}
 {% include "partials/page_heading.html" with eyebrow=request.tenant.name heading="Welcome back" description="Your business workspace is ready for the next setup steps." %}
 <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Dashboard summary">
-  <article class="card border border-base-300 bg-base-100 shadow-sm"><div class="card-body"><p class="text-sm text-base-content/60">Customers</p><p class="text-2xl font-semibold">Coming soon</p><p class="text-sm text-base-content/60">Customer records will be available in a later phase.</p></div></article>
+  <article class="card border border-base-300 bg-base-100 shadow-sm"><div class="card-body"><p class="text-sm text-base-content/60">Active customers</p><p class="text-2xl font-semibold">{{ customer_count }}</p><p class="text-sm text-base-content/60">Customer contact and billing records in this business.</p><a class="link link-primary mt-2" href="{% url 'customers:list' %}">View customers</a></div></article>
   <article class="card border border-base-300 bg-base-100 shadow-sm"><div class="card-body"><p class="text-sm text-base-content/60">Invoices</p><p class="text-2xl font-semibold">Coming soon</p><p class="text-sm text-base-content/60">Sales workflows are planned for a later phase.</p></div></article>
   <article class="card border border-base-300 bg-base-100 shadow-sm"><div class="card-body"><p class="text-sm text-base-content/60">Your role</p><p class="text-2xl font-semibold">{{ request.tenant_membership.get_role_display }}</p><p class="text-sm text-base-content/60">Access is checked against your current membership.</p>{% if can_manage_team %}<a class="link link-primary mt-2" href="{% url 'tenants:team' %}">Manage team</a>{% endif %}</div></article>
 </section>
