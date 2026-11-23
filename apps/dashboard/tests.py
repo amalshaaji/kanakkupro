@@ -40,6 +40,8 @@ class DashboardAccessTests(TestCase):
         self.assertContains(response, 'aria-label="Breadcrumb"')
         self.assertContains(response, "Active customers")
         self.assertContains(response, "View customers")
+        self.assertContains(response, "Active catalog items")
+        self.assertContains(response, "View catalog")
 
     def test_authenticated_user_without_business_is_sent_to_setup(self):
         get_user_model().objects.create_user(

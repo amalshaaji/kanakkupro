@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.name }} | Catalog | KankkuPro{% endblock %}
+{% block breadcrumbs %}<nav class="breadcrumbs mb-6 text-sm" aria-label="Breadcrumb"><ol><li><a href="{% url 'dashboard:index' %}">Workspace</a></li><li><a href="{% url 'catalog:list' %}">Catalog</a></li><li aria-current="page">{{ item.name }}</li></ol></nav>{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex flex-wrap items-start justify-between gap-4">
+  <div class="min-w-0"><span class="badge {% if item.active %}badge-success badge-outline{% else %}badge-ghost{% endif %}">{% if item.active %}Active{% else %}Archived{% endif %}</span>{% include "partials/page_heading.html" with heading=item.name description=item.get_kind_display %}</div>
+  {% if can_manage_catalog %}<div class="flex flex-wrap gap-2"><a class="btn btn-outline btn-sm" href="{% url 'catalog:update' item.id %}">Edit</a>{% if item.active %}<form method="post" action="{% url 'catalog:set_active' item.id 'false' %}">{% csrf_token %}<button class="btn btn-ghost btn-sm text-error" type="submit">Archive</button></form>{% else %}<form method="post" action="{% url 'catalog:set_active' item.id 'true' %}">{% csrf_token %}<button class="btn btn-outline btn-sm" type="submit">Restore</button></form>{% endif %}</div>{% endif %}
+</div>
+<div class="alert alert-warning mb-6" role="status">Pricing and tax treatment are not configured; this item cannot be added to an invoice.</div>
+<section class="card max-w-3xl border border-base-300 bg-base-100 shadow-sm" aria-label="Catalog item details"><div class="card-body"><dl class="grid gap-4 sm:grid-cols-2"><div><dt class="text-sm text-base-content/60">Type</dt><dd class="mt-1">{{ item.get_kind_display }}</dd></div><div><dt class="text-sm text-base-content/60">SKU</dt><dd class="mt-1">{{ item.sku|default:"Not provided" }}</dd></div><div><dt class="text-sm text-base-content/60">Unit</dt><dd class="mt-1">{{ item.unit|default:"Not specified" }}</dd></div><div class="sm:col-span-2"><dt class="text-sm text-base-content/60">Description</dt><dd class="mt-1 whitespace-pre-line">{{ item.description|default:"No description provided." }}</dd></div></dl></div></section>
+{% endblock %}

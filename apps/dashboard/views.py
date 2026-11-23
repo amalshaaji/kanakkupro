@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
+from apps.catalog.models import CatalogItem
 from apps.customers.models import Customer
 from apps.tenants.permissions import membership_has_permission
 
@@ -22,6 +23,9 @@ def dashboard(request):
             ),
             "customer_count": Customer.objects.filter(
                 tenant=request.tenant, status=Customer.Status.ACTIVE
+            ).count(),
+            "catalog_count": CatalogItem.objects.filter(
+                tenant=request.tenant, active=True
             ).count(),
         },
     )

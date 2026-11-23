@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "apps.accounts.apps.AccountsConfig",
     "apps.tenants.apps.TenantsConfig",
     "apps.customers.apps.CustomersConfig",
+    "apps.catalog.apps.CatalogConfig",
     "apps.dashboard.apps.DashboardConfig",
 ]
 

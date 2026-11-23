@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Catalog | KankkuPro{% endblock %}
+{% block breadcrumbs %}{% include "partials/breadcrumbs.html" with current_page="Catalog" %}{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+  {% include "partials/page_heading.html" with eyebrow=request.tenant.name heading="Products and services" description="Maintain the items your business offers." %}
+  {% if can_manage_catalog %}<a class="btn btn-primary" href="{% url 'catalog:create' %}">Add item</a>{% endif %}
+</div>
+
+<div class="alert alert-warning mb-6" role="status">
+  <span>Pricing and tax treatment are not configured yet. Catalog items cannot be added to invoices until the business currency and tax rules are decided.</span>
+</div>
+
+<section class="card mb-6 border border-base-300 bg-base-100 shadow-sm" aria-label="Filter catalog items">
+  <div class="card-body p-4">
+    <form method="get" class="grid gap-3 sm:grid-cols-[minmax(12rem,1fr)_10rem_10rem_auto] sm:items-end">
+      <div class="form-control gap-1"><label class="label" for="catalog-search"><span class="label-text font-medium">Search</span></label><input class="input input-bordered w-full" id="catalog-search" name="q" type="search" value="{{ search }}" placeholder="Name, SKU, or description"></div>
+      <div class="form-control gap-1"><label class="label" for="catalog-kind"><span class="label-text font-medium">Type</span></label><select class="select select-bordered w-full" id="catalog-kind" name="kind"><option value="all" {% if kind_filter == "all" %}selected{% endif %}>All types</option><option value="product" {% if kind_filter == "product" %}selected{% endif %}>Products</option><option value="service" {% if kind_filter == "service" %}selected{% endif %}>Services</option></select></div>
+      <div class="form-control gap-1"><label class="label" for="catalog-active"><span class="label-text font-medium">Status</span></label><select class="select select-bordered w-full" id="catalog-active" name="active"><option value="true" {% if active_filter == "true" %}selected{% endif %}>Active</option><option value="false" {% if active_filter == "false" %}selected{% endif %}>Archived</option><option value="all" {% if active_filter == "all" %}selected{% endif %}>All items</option></select></div>
+      <button class="btn btn-outline" type="submit">Apply filters</button>
+    </form>
+  </div>
+</section>
+
+<section aria-label="Catalog items">
+  <p class="mb-3 text-sm text-base-content/70">{{ page_obj.paginator.count }} item{{ page_obj.paginator.count|pluralize }}</p>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table table-zebra">
+      <thead><tr><th scope="col">Name</th><th scope="col">Type</th><th scope="col">SKU</th><th scope="col">Unit</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+      <tbody>
+        {% for item in page_obj %}
+          <tr><th scope="row"><a class="link link-hover font-semibold" href="{% url 'catalog:detail' item.id %}">{{ item.name }}</a></th><td>{{ item.get_kind_display }}</td><td>{{ item.sku|default:"—" }}</td><td>{{ item.unit|default:"—" }}</td><td><span class="badge {% if item.active %}badge-success badge-outline{% else %}badge-ghost{% endif %}">{% if item.active %}Active{% else %}Archived{% endif %}</span></td><td><a class="btn btn-ghost btn-sm" href="{% url 'catalog:detail' item.id %}">View<span class="sr-only"> {{ item.name }}</span></a></td></tr>
+        {% empty %}
+          <tr><td colspan="6" class="py-12 text-center"><p class="font-semibold">{% if search %}No items match this search.{% else %}No catalog items yet.{% endif %}</p><p class="mt-1 text-sm text-base-content/60">{% if search %}Try a different name, SKU, or description.{% else %}Add products and services to organize the items your business offers.{% endif %}</p>{% if can_manage_catalog and not search %}<a class="btn btn-primary btn-sm mt-4" href="{% url 'catalog:create' %}">Add first item</a>{% endif %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.has_other_pages %}<nav class="mt-4 flex items-center justify-between gap-4" aria-label="Catalog pages">{% if page_obj.has_previous %}<a class="btn btn-outline btn-sm" href="?q={{ search|urlencode }}&amp;kind={{ kind_filter|urlencode }}&amp;active={{ active_filter|urlencode }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>{% else %}<span></span>{% endif %}<p class="text-sm text-base-content/70">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</p>{% if page_obj.has_next %}<a class="btn btn-outline btn-sm" href="?q={{ search|urlencode }}&amp;kind={{ kind_filter|urlencode }}&amp;active={{ active_filter|urlencode }}&amp;page={{ page_obj.next_page_number }}">Next</a>{% else %}<span></span>{% endif %}</nav>{% endif %}
+</section>
+{% endblock %}
