@@ -63,6 +63,8 @@ The shared shell provides keyboard skip navigation, responsive workspace navigat
 
 These probes do not verify migration state, email delivery, backups, or restore readiness. Configure host-level monitoring, alert routing, database backup retention, and isolated restore drills before production.
 
+See [Production Operations Readiness](docs/operations.md) for the pre-pilot decisions, deployment checklist, backup/restore drill, and incident runbooks.
+
 ## Checks and tests
 
 ```bash
