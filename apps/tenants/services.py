@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 
+from apps.audit.services import record_event
 from apps.tenants.models import Invitation, Tenant, TenantMembership
 from apps.tenants.permissions import membership_has_permission
 
@@ -20,7 +21,7 @@ class InvitationError(Exception):
     """An invitation cannot be used in its current state."""
 
 
-def create_tenant_for_owner(*, owner, form_data):
+def create_tenant_for_owner(*, owner, form_data, correlation_id=""):
     base_slug = slugify(form_data["name"])[:180] or "business"
 
     for attempt in range(5):
@@ -32,6 +33,14 @@ def create_tenant_for_owner(*, owner, form_data):
                     tenant=tenant,
                     user=owner,
                     role=TenantMembership.Role.OWNER,
+                )
+                record_event(
+                    tenant=tenant,
+                    actor=owner,
+                    action="tenant.created",
+                    entity_type="tenant",
+                    entity_id=tenant.pk,
+                    correlation_id=correlation_id,
                 )
             return tenant
         except IntegrityError:
@@ -96,6 +105,15 @@ def create_invitation(*, tenant, actor, email, role, request):
                 created_by=actor,
                 expires_at=now + timedelta(days=invitation_ttl_days),
             )
+            record_event(
+                tenant=tenant,
+                actor=actor,
+                action="tenant.invitation_created",
+                entity_type="invitation",
+                entity_id=invitation.pk,
+                correlation_id=getattr(request, "request_id", ""),
+                metadata={"role": role},
+            )
             invitation_url = request.build_absolute_uri(
                 reverse("tenants:accept_invitation", kwargs={"token": token})
             )
@@ -127,7 +145,7 @@ def create_invitation(*, tenant, actor, email, role, request):
     return invitation
 
 
-def accept_invitation(*, token, user):
+def accept_invitation(*, token, user, correlation_id=""):
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
     now = timezone.now()
     with transaction.atomic():
@@ -163,6 +181,15 @@ def accept_invitation(*, token, user):
         invitation.accepted_at = now
         invitation.accepted_by = user
         invitation.save(update_fields=["accepted_at", "accepted_by"])
+        record_event(
+            tenant=invitation.tenant,
+            actor=user,
+            action="tenant.invitation_accepted",
+            entity_type="tenant_membership",
+            entity_id=membership.pk,
+            correlation_id=correlation_id,
+            metadata={"role": membership.role},
+        )
 
     return membership
 
@@ -204,7 +231,7 @@ def _validate_invitation_for_user(invitation, user, now):
         raise InvitationError
 
 
-def revoke_invitation(*, tenant, actor, invitation_id):
+def revoke_invitation(*, tenant, actor, invitation_id, correlation_id=""):
     with transaction.atomic():
         membership = (
             TenantMembership.objects.select_for_update()
@@ -231,4 +258,12 @@ def revoke_invitation(*, tenant, actor, invitation_id):
 
         invitation.revoked_at = timezone.now()
         invitation.save(update_fields=["revoked_at"])
+        record_event(
+            tenant=tenant,
+            actor=actor,
+            action="tenant.invitation_revoked",
+            entity_type="invitation",
+            entity_id=invitation.pk,
+            correlation_id=correlation_id,
+        )
     return invitation

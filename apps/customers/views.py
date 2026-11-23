@@ -81,6 +81,7 @@ def customer_create(request):
             tenant=request.tenant,
             actor=request.user,
             values=form.cleaned_data,
+            correlation_id=request.request_id,
         )
         messages.success(request, f"{customer} was added to your customers.")
         return redirect("customers:detail", customer_id=customer.pk)
@@ -104,6 +105,7 @@ def customer_update(request, customer_id):
             actor=request.user,
             customer_id=customer.pk,
             values=form.cleaned_data,
+            correlation_id=request.request_id,
         )
         messages.success(request, f"{customer} was updated.")
         return redirect("customers:detail", customer_id=customer.pk)
@@ -125,6 +127,7 @@ def customer_set_status(request, customer_id, status):
         actor=request.user,
         customer_id=customer_id,
         status=status,
+        correlation_id=request.request_id,
     )
     state_label = "restored" if status == Customer.Status.ACTIVE else "archived"
     messages.success(request, f"{customer} was {state_label}.")

@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from apps.audit.models import AuditEvent
 from apps.customers.models import Customer
 from apps.tenants.models import Tenant, TenantMembership
 
@@ -49,6 +50,9 @@ class CustomerManagementTests(TestCase):
         self.assertEqual(customer.country, "IN")
         self.assertEqual(customer.created_by, self.owner)
         self.assertEqual(customer.updated_by, self.owner)
+        event = AuditEvent.objects.get(entity_id=customer.pk)
+        self.assertEqual(event.action, "customer.created")
+        self.assertEqual(event.correlation_id, response["X-Request-ID"])
 
     def test_customer_list_search_is_tenant_scoped(self):
         visible = self.customer(name="Aster Labs")

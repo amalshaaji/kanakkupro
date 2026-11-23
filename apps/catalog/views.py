@@ -86,7 +86,10 @@ def item_create(request):
     if request.method == "POST" and form.is_valid():
         try:
             item = create_catalog_item(
-                tenant=request.tenant, actor=request.user, values=form.cleaned_data
+                tenant=request.tenant,
+                actor=request.user,
+                values=form.cleaned_data,
+                correlation_id=request.request_id,
             )
         except PermissionDenied:
             raise
@@ -114,6 +117,7 @@ def item_update(request, item_id):
                 actor=request.user,
                 item_id=item.pk,
                 values=form.cleaned_data,
+                correlation_id=request.request_id,
             )
         except IntegrityError:
             form.add_error("sku", "This SKU is already used in this business.")
@@ -138,6 +142,7 @@ def item_set_active(request, item_id, active):
         actor=request.user,
         item_id=item_id,
         active=active == "true",
+        correlation_id=request.request_id,
     )
     state = "restored" if item.active else "archived"
     messages.success(request, f"{item.name} was {state}.")

@@ -44,7 +44,9 @@ def create_tenant(request):
         if form.is_valid():
             try:
                 tenant = create_tenant_for_owner(
-                    owner=request.user, form_data=form.cleaned_data
+                    owner=request.user,
+                    form_data=form.cleaned_data,
+                    correlation_id=request.request_id,
                 )
             except ValidationError as error:
                 form.add_error(None, error)
@@ -134,6 +136,7 @@ def revoke(request, invitation_id):
             tenant=request.tenant,
             actor=request.user,
             invitation_id=invitation_id,
+            correlation_id=request.request_id,
         )
     except InvitationError as error:
         raise Http404 from error
@@ -161,7 +164,9 @@ def accept(request, token):
         )
 
     try:
-        membership = accept_invitation(token=token, user=request.user)
+        membership = accept_invitation(
+            token=token, user=request.user, correlation_id=request.request_id
+        )
     except InvitationError:
         messages.error(request, "This invitation is invalid or no longer available.")
         return redirect("dashboard:index")

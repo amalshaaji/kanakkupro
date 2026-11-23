@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from apps.audit.models import AuditEvent
 from apps.catalog.models import CatalogItem
 from apps.tenants.models import Tenant, TenantMembership
 
@@ -55,6 +56,9 @@ class CatalogManagementTests(TestCase):
         self.assertFalse(hasattr(item, "price"))
         self.assertFalse(hasattr(item, "tax_treatment"))
         self.assertContains(response, "cannot be added to an invoice")
+        event = AuditEvent.objects.get(entity_id=item.pk)
+        self.assertEqual(event.action, "catalog_item.created")
+        self.assertEqual(len(event.correlation_id), 32)
 
     def test_catalog_search_is_tenant_scoped(self):
         visible = self.item(name="Aster Consulting")

@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "allauth.account",
     "apps.accounts.apps.AccountsConfig",
     "apps.tenants.apps.TenantsConfig",
+    "apps.audit.apps.AuditConfig",
     "apps.customers.apps.CustomersConfig",
     "apps.catalog.apps.CatalogConfig",
     "apps.dashboard.apps.DashboardConfig",
@@ -34,6 +35,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "apps.audit.middleware.RequestIDMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
