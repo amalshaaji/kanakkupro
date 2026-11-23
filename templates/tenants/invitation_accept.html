@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Join {{ invitation.tenant.name }} | KankkuPro{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-xl">
+  <p class="text-sm font-medium text-primary">Business invitation</p>
+  <h1 class="mt-1 text-3xl font-bold tracking-tight">Join {{ invitation.tenant.name }}</h1>
+  <p class="mt-4 leading-7 text-base-content/70">You were invited as {{ invitation.get_role_display }} using {{ invitation.email }}.</p>
+  <form class="mt-8" method="post">
+    {% csrf_token %}
+    <button class="btn btn-primary" type="submit">Accept invitation</button>
+  </form>
+</section>
+{% endblock %}

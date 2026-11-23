@@ -74,4 +74,4 @@ Set `DJANGO_SETTINGS_MODULE=config.settings.production` in the deployment enviro
 
 ## Implemented phases
 
-Phase 1 foundation and Phase 2 identity flows are implemented. The foundation apps: `accounts`, `tenants`, and `dashboard`. Tenant setup leaves country and currency optional because the launch market and financial policy have not been selected. Invitations, customers, catalog, invoices, payments, subscriptions, inventory, and production monitoring remain later phases.
+Phases 1–3 are implemented across `accounts`, `tenants`, and `dashboard`. Tenant setup leaves country and currency optional because the launch market and financial policy have not been selected. The active tenant is stored in the session but resolved from a current active membership on each request. Tenant creation and owner membership commit atomically. Owner and Admin roles can invite members; invitation links are hashed at rest, bound to the invited verified email, expire after seven days by default, and require a CSRF-protected POST to accept. Customer, catalog, invoice, payment, subscription, inventory, and production monitoring features remain later phases.

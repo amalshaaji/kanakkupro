@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Invitation unavailable | KankkuPro{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-xl">
+  <h1 class="text-3xl font-bold tracking-tight">This invitation is for another account</h1>
+  <p class="mt-4 leading-7 text-base-content/70">Sign in with the verified email address that received the invitation.</p>
+  <form class="mt-6" method="post" action="{% url 'account_logout' %}">
+    {% csrf_token %}
+    <button class="btn btn-primary" type="submit">Sign out</button>
+  </form>
+</section>
+{% endblock %}

@@ -8,7 +8,25 @@
   <nav aria-label="Main navigation" class="flex items-center gap-2">
     {% if request.user.is_authenticated %}
       <a class="btn btn-ghost btn-sm" href="{% url 'dashboard:index' %}">Dashboard</a>
-      <span class="hidden text-sm text-base-content/70 sm:inline">{{ request.user.email }}</span>
+      {% if request.tenant_memberships|length > 1 %}
+        <form method="post" action="{% url 'tenants:switch' %}" class="flex items-center gap-1 sm:gap-2">
+          {% csrf_token %}
+          <label class="sr-only" for="active-tenant">Active business</label>
+          <select class="select select-bordered select-xs max-w-28 sm:select-sm sm:max-w-48" id="active-tenant" name="tenant_id">
+            {% for membership in request.tenant_memberships %}
+              <option value="{{ membership.tenant_id }}" {% if request.tenant.pk == membership.tenant_id %}selected{% endif %}>{{ membership.tenant.name }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn btn-ghost btn-sm" type="submit">Switch</button>
+        </form>
+      {% elif request.tenant %}
+        <span class="hidden max-w-40 truncate text-sm text-base-content/70 sm:inline">{{ request.tenant.name }}</span>
+      {% else %}
+        <a class="btn btn-ghost btn-sm" href="{% url 'tenants:create' %}">Create business</a>
+      {% endif %}
+      {% if request.can_manage_tenant_team %}
+        <a class="btn btn-ghost btn-sm" href="{% url 'tenants:team' %}">Team</a>
+      {% endif %}
       <form method="post" action="{% url 'account_logout' %}">
         {% csrf_token %}
         <button class="btn btn-outline btn-sm" type="submit">Sign out</button>

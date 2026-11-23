@@ -2,6 +2,7 @@
 @plugin "daisyui";
 
 @source "../../templates";
+@source "../../apps";
 
 @layer components {
   main form p {

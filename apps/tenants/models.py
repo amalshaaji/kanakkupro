@@ -2,6 +2,9 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
+from django.db.models.functions import Lower
+from django.utils import timezone
 
 
 class Tenant(models.Model):
@@ -60,9 +63,7 @@ class TenantMembership(models.Model):
             )
         ]
         indexes = [
-            models.Index(
-                fields=["user", "status"], name="membership_user_status_idx"
-            )
+            models.Index(fields=["user", "status"], name="membership_user_status_idx")
         ]
 
     @property
@@ -71,3 +72,62 @@ class TenantMembership(models.Model):
 
     def __str__(self):
         return f"{self.user} — {self.tenant} ({self.get_role_display()})"
+
+
+class Invitation(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        Tenant, on_delete=models.PROTECT, related_name="invitations"
+    )
+    email = models.EmailField(max_length=254)
+    role = models.CharField(
+        max_length=20,
+        choices=[
+            choice
+            for choice in TenantMembership.Role.choices
+            if choice[0] != TenantMembership.Role.OWNER
+        ],
+    )
+    token_hash = models.CharField(max_length=64, unique=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="sent_tenant_invitations",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    accepted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="accepted_tenant_invitations",
+    )
+    revoked_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                "tenant",
+                Lower("email"),
+                condition=Q(accepted_at__isnull=True, revoked_at__isnull=True),
+                name="uq_pending_invite_tenant_email_ci",
+            )
+        ]
+        indexes = [
+            models.Index(
+                fields=["tenant", "expires_at"], name="invitation_tenant_expiry_idx"
+            )
+        ]
+
+    @property
+    def is_pending(self):
+        return (
+            self.accepted_at is None
+            and self.revoked_at is None
+            and self.expires_at > timezone.now()
+        )
+
+    def __str__(self):
+        return f"{self.email} → {self.tenant} ({self.get_role_display()})"

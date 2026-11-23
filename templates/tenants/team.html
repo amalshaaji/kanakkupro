@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Team | KankkuPro{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <p class="text-sm font-medium text-primary">{{ request.tenant.name }}</p>
+    <h1 class="mt-1 text-3xl font-bold tracking-tight">Team access</h1>
+    <p class="mt-2 text-base-content/70">Manage who can access this business workspace.</p>
+  </div>
+</div>
+
+<section class="card border border-base-300 bg-base-100" aria-labelledby="invite-heading">
+  <div class="card-body">
+    <h2 class="card-title" id="invite-heading">Invite a teammate</h2>
+    <form method="post" class="grid gap-4 md:grid-cols-[1fr_16rem_auto] md:items-end">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="alert alert-error md:col-span-3">{{ form.non_field_errors }}</div>{% endif %}
+      {% for field in form %}
+        <div class="form-control gap-1">
+          <label class="label" for="{{ field.id_for_label }}"><span class="label-text font-medium">{{ field.label }}</span></label>
+          {{ field }}
+          {% for error in field.errors %}<p class="text-sm text-error">{{ error }}</p>{% endfor %}
+        </div>
+      {% endfor %}
+      <button class="btn btn-primary" type="submit">Send invitation</button>
+    </form>
+    <p class="text-sm text-base-content/60">Invitations expire after the configured period. Only Owner and Admin memberships can manage invitations.</p>
+  </div>
+</section>
+
+<section class="mt-8" aria-labelledby="members-heading">
+  <h2 class="mb-3 text-xl font-semibold" id="members-heading">Members</h2>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table">
+      <thead><tr><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Status</th></tr></thead>
+      <tbody>
+        {% for membership in members %}
+          <tr><td>{{ membership.user.email }}</td><td>{{ membership.get_role_display }}</td><td>{{ membership.get_status_display }}</td></tr>
+        {% empty %}
+          <tr><td colspan="3" class="py-8 text-center text-base-content/60">No members found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="mt-8" aria-labelledby="invitations-heading">
+  <h2 class="mb-3 text-xl font-semibold" id="invitations-heading">Pending invitations</h2>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table">
+      <thead><tr><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Expires</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+      <tbody>
+        {% for invitation in invitations %}
+          <tr>
+            <td>{{ invitation.email }}</td><td>{{ invitation.get_role_display }}</td><td>{{ invitation.expires_at|date:"M j, Y H:i T" }}</td>
+            <td>
+              <form method="post" action="{% url 'tenants:revoke' invitation.id %}">
+                {% csrf_token %}
+                <button class="btn btn-ghost btn-sm text-error" type="submit">Revoke</button>
+              </form>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4" class="py-8 text-center text-base-content/60">No pending invitations.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
