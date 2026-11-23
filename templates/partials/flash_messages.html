@@ -1,0 +1,9 @@
+{% if messages %}
+  <div class="mx-auto mb-6 w-full max-w-6xl space-y-2 {% if not request.tenant %}px-5 sm:px-8 lg:px-10{% endif %}" aria-label="Notifications">
+    {% for message in messages %}
+      <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}" role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}" aria-live="{% if message.tags == 'error' %}assertive{% else %}polite{% endif %}">
+        <span>{{ message }}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}

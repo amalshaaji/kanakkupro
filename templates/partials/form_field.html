@@ -1,0 +1,13 @@
+<div class="form-control min-w-0 gap-1">
+  <label class="label" for="{{ field.id_for_label }}">
+    <span class="label-text font-medium">{{ field.label }}</span>
+    {% if field.field.required %}<span class="label-text-alt" aria-hidden="true">Required</span>{% endif %}
+  </label>
+  {{ field }}
+  {% if field.help_text %}<span id="{{ field.id_for_label }}_helptext" class="label-text-alt text-base-content/60">{{ field.help_text }}</span>{% endif %}
+  {% if field.errors %}
+    <ul id="{{ field.id_for_label }}_errors" class="mt-1 list-none space-y-1 text-sm text-error" role="alert">
+      {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+</div>

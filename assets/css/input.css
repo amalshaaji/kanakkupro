@@ -4,7 +4,39 @@
 @source "../../templates";
 @source "../../apps";
 
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-width: 320px;
+  }
+
+  :focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+  }
+}
+
 @layer components {
+  .skip-link {
+    @apply fixed left-4 top-4 z-50 -translate-y-24 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-content shadow-lg transition-transform focus:translate-y-0;
+  }
+
+  .page-heading {
+    @apply mb-8;
+  }
+
+  .htmx-indicator {
+    @apply hidden items-center rounded-lg bg-base-100 px-4 py-3 text-base-content shadow-sm;
+  }
+
+  .htmx-request .htmx-indicator,
+  .htmx-request.htmx-indicator {
+    @apply flex;
+  }
+
   main form p {
     @apply mb-4;
   }

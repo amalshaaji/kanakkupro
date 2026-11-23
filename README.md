@@ -1,6 +1,6 @@
 # KankkuPro ERP
 
-KankkuPro is a multi-tenant business workspace built as a Django modular monolith. The repository currently contains the project foundation and identity flows: email-based accounts, email verification, secure login/logout, password recovery, tenant and membership records, and public and protected starter pages.
+KankkuPro is a multi-tenant business workspace built as a Django modular monolith. The repository contains the project foundation, email identity flows, tenant onboarding and team invitations, and the shared responsive UI shell. Business records and financial workflows are planned phases.
 
 ## Requirements
 
@@ -53,6 +53,8 @@ Local verification and password-reset messages are printed by Django's console e
 
 Use `npm run watch:css` in a second terminal while editing templates and styles. HTMX is installed from npm and copied into `static/vendor` by `npm run build`.
 
+The shared shell provides keyboard skip navigation, responsive workspace navigation, accessible form error links, live status messages, and a loading indicator for HTMX requests. HTMX writes must use Django CSRF protection and server-side validation. Partial responses should update only the requested component, preserve useful empty/error states, and expose updated content through `aria-live` regions. Use `hx-push-url` only when browser navigation should represent the new state; protect write requests against duplicates on the server.
+
 ## Checks and tests
 
 ```bash
@@ -74,4 +76,4 @@ Set `DJANGO_SETTINGS_MODULE=config.settings.production` in the deployment enviro
 
 ## Implemented phases
 
-Phases 1–3 are implemented across `accounts`, `tenants`, and `dashboard`. Tenant setup leaves country and currency optional because the launch market and financial policy have not been selected. The active tenant is stored in the session but resolved from a current active membership on each request. Tenant creation and owner membership commit atomically. Owner and Admin roles can invite members; invitation links are hashed at rest, bound to the invited verified email, expire after seven days by default, and require a CSRF-protected POST to accept. Customer, catalog, invoice, payment, subscription, inventory, and production monitoring features remain later phases.
+Phases 1–4 are implemented across `accounts`, `tenants`, and `dashboard`. The shared UI uses Django templates, HTMX, Tailwind CSS v4, and DaisyUI 5, with a responsive workspace shell and accessible form feedback. Tenant setup leaves country and currency optional because the launch market and financial policy have not been selected. The active tenant is stored in the session but resolved from a current active membership on each request. Tenant creation and owner membership commit atomically. Owner and Admin roles can invite members; invitation links are hashed at rest, bound to the invited verified email, expire after seven days by default, and require a CSRF-protected POST to accept. Customer, catalog, invoice, payment, subscription, inventory, and production monitoring features remain later phases.

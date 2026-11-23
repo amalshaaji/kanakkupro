@@ -1,0 +1,15 @@
+<nav aria-label="Workspace" class="flex flex-col gap-1">
+  <p class="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-base-content/60">Workspace</p>
+  <a class="btn btn-ghost justify-start {% if request.resolver_match.view_name == 'dashboard:index' %}menu-active{% endif %}" href="{% url 'dashboard:index' %}" {% if request.resolver_match.view_name == 'dashboard:index' %}aria-current="page"{% endif %}>
+    <svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7"/><path d="M5 9v12h14V9"/><path d="M9 21v-7h6v7"/></svg> Overview
+  </a>
+  {% if request.can_manage_tenant_team %}
+    <a class="btn btn-ghost justify-start {% if request.resolver_match.view_name == 'tenants:team' %}menu-active{% endif %}" href="{% url 'tenants:team' %}" {% if request.resolver_match.view_name == 'tenants:team' %}aria-current="page"{% endif %}>
+      <svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Team access
+    </a>
+  {% endif %}
+  <div class="mt-6 border-t border-base-300 pt-4">
+    <p class="truncate px-3 text-xs text-base-content/60">Signed in as</p>
+    <p class="mt-1 truncate px-3 text-sm font-medium" title="{{ request.user.email }}">{{ request.user.email }}</p>
+  </div>
+</nav>

@@ -35,15 +35,16 @@ class DashboardAccessTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Northwind")
+        self.assertContains(response, 'href="#main-content">Skip to main content')
+        self.assertContains(response, 'aria-label="Workspace navigation"')
+        self.assertContains(response, 'aria-label="Breadcrumb"')
 
     def test_authenticated_user_without_business_is_sent_to_setup(self):
         get_user_model().objects.create_user(
             "new-owner@example.com", password="correct-horse"
         )
         self.assertTrue(
-            self.client.login(
-                email="new-owner@example.com", password="correct-horse"
-            )
+            self.client.login(email="new-owner@example.com", password="correct-horse")
         )
 
         response = self.client.get(reverse("dashboard:index"))

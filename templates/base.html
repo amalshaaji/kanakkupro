@@ -8,24 +8,45 @@
     <title>{% block title %}KankkuPro{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
+    {% block extra_head %}{% endblock %}
   </head>
-  <body class="min-h-screen bg-base-200 text-base-content">
+  <body class="min-h-screen bg-base-200 text-base-content" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     {% include "partials/site_header.html" %}
-    <main id="main-content" class="mx-auto w-full max-w-6xl px-5 py-12 md:px-10">
-      {% if messages %}
-        <div class="mb-6 space-y-2" aria-live="polite">
-          {% for message in messages %}
-            <div class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-info{% endif %}">{{ message }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
+
+    {% if request.user.is_authenticated and request.tenant %}
+      <div class="mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-[100rem] lg:grid-cols-[16rem_minmax(0,1fr)]">
+        <aside class="hidden border-r border-base-300 bg-base-100 p-4 lg:block" aria-label="Workspace navigation">
+          {% include "partials/app_navigation.html" %}
+        </aside>
+        <div class="min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+          {% include "partials/htmx_status.html" %}
+          {% include "partials/flash_messages.html" %}
+    {% else %}
+      {% include "partials/flash_messages.html" %}
+    {% endif %}
+    <main id="main-content" class="mx-auto w-full max-w-6xl {% if request.user.is_authenticated and request.tenant %}{% else %}px-5 py-10 sm:px-8 sm:py-12 lg:px-10{% endif %}" {% if request.user.is_authenticated and request.tenant %}hx-indicator="#htmx-status"{% endif %}>
+      {% block breadcrumbs %}{% endblock %}
       {% block content %}{% endblock %}
     </main>
+    {% if request.user.is_authenticated and request.tenant %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div id="htmx-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
     <script>
       document.body.addEventListener("htmx:configRequest", (event) => {
-        const token = document.querySelector("[name=csrfmiddlewaretoken]")?.value;
+        const token = document.querySelector("input[name=csrfmiddlewaretoken]")?.value;
         if (token) event.detail.headers["X-CSRFToken"] = token;
       });
+      document.body.addEventListener("htmx:beforeRequest", (event) => {
+        event.detail.target?.setAttribute("aria-busy", "true");
+      });
+      document.body.addEventListener("htmx:afterRequest", (event) => {
+        event.detail.target?.removeAttribute("aria-busy");
+      });
     </script>
+    {% block extra_body %}{% endblock %}
   </body>
 </html>

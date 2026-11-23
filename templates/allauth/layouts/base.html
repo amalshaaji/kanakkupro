@@ -9,15 +9,16 @@
     <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
     {% block extra_head %}{% endblock %}
   </head>
-  <body class="min-h-screen bg-base-200 text-base-content">
+  <body class="min-h-screen bg-base-200 text-base-content" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     {% include "partials/site_header.html" %}
-    <main class="mx-auto w-full max-w-xl px-5 py-12 md:px-10">
+    <main id="main-content" class="mx-auto w-full max-w-xl px-5 py-12 md:px-10">
       <section class="card border border-base-300 bg-base-100 shadow-sm">
         <div class="card-body p-7 sm:p-9">
           {% if messages %}
             <div class="mb-5 space-y-2" aria-live="polite">
               {% for message in messages %}
-                <div class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-info{% endif %}">{{ message }}</div>
+                <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}" role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}" aria-live="{% if message.tags == 'error' %}assertive{% else %}polite{% endif %}">{{ message }}</div>
               {% endfor %}
             </div>
           {% endif %}
@@ -29,6 +30,12 @@
       document.body.addEventListener("htmx:configRequest", (event) => {
         const token = document.querySelector("[name=csrfmiddlewaretoken]")?.value;
         if (token) event.detail.headers["X-CSRFToken"] = token;
+      });
+      document.body.addEventListener("htmx:beforeRequest", (event) => {
+        event.detail.target?.setAttribute("aria-busy", "true");
+      });
+      document.body.addEventListener("htmx:afterRequest", (event) => {
+        event.detail.target?.removeAttribute("aria-busy");
       });
     </script>
     {% block extra_body %}{% endblock %}
