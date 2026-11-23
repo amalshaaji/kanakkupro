@@ -18,10 +18,10 @@ Record these in the deployment's decision log before creating production tenant 
 - Hosting provider, region, TLS termination, and trusted proxy behavior.
 - Production Neon plan and endpoint strategy for application traffic and migrations.
 - Backup retention and restore capability available on that plan.
-- Accepted recovery point and recovery time objectives. The proposed PRD targets are RPO 24 hours and RTO 4 hours; validate them against the business risk before adoption.
+- Provider capability for the approved RPO 24 hours and RTO 4 hours targets; verify these with an isolated restore drill before pilot.
 - Email delivery provider and a monitored sender address.
 - Error monitoring and alert destination, with event data retention and privacy settings reviewed.
-- Support contact, incident owner, and data retention/deletion policy.
+- Support contact, incident owner, and data retention/deletion procedures. The approved financial-record baseline is at least 72 months from the annual-return due date, extended for related proceedings; see [ADR-001](decisions/ADR-001-india-launch.md). Backup retention and nonfinancial data policies still need deployment decisions.
 
 Do not enable HSTS preload, trust forwarded client IP headers, or advertise recovery objectives until the deployment has been verified.
 

@@ -1,3 +1,7 @@
+import csv
+import io
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -85,6 +89,46 @@ class OperationalReportTests(TestCase):
             report, "Exports are available to Owners, Admins, and Managers."
         )
         self.assertEqual(export.status_code, 403)
+
+    def test_catalog_csv_preserves_financial_precision_and_tenant_scope(self):
+        CatalogItem.objects.create(
+            tenant=self.tenant,
+            created_by=self.owner,
+            name="Taxable service",
+            kind=CatalogItem.Kind.SERVICE,
+            price=Decimal("1250.1234"),
+            hsn_sac="998314",
+            tax_treatment=CatalogItem.TaxTreatment.TAXABLE,
+            tax_rate=Decimal("18.0000"),
+        )
+        CatalogItem.objects.create(
+            tenant=self.tenant,
+            created_by=self.owner,
+            name="Legacy service",
+            kind=CatalogItem.Kind.SERVICE,
+        )
+        other = Tenant.objects.create(name="Contoso", slug="contoso")
+        CatalogItem.objects.create(
+            tenant=other,
+            created_by=self.owner,
+            name="Other tenant service",
+            kind=CatalogItem.Kind.SERVICE,
+        )
+        response = self.client.get(reverse("reports:export_catalog"))
+        rows = list(
+            csv.DictReader(
+                io.StringIO(b"".join(response.streaming_content).decode("utf-8"))
+            )
+        )
+        self.assertEqual(len(rows), 2)
+        by_name = {row["name"]: row for row in rows}
+        self.assertEqual(by_name["Taxable service"]["price"], "1250.1234")
+        self.assertEqual(by_name["Taxable service"]["currency"], "INR")
+        self.assertEqual(by_name["Taxable service"]["hsn_sac"], "998314")
+        self.assertEqual(by_name["Taxable service"]["tax_treatment"], "taxable")
+        self.assertEqual(by_name["Taxable service"]["tax_rate_percent"], "18.0000")
+        self.assertEqual(by_name["Legacy service"]["price"], "")
+        self.assertEqual(by_name["Legacy service"]["tax_rate_percent"], "")
 
 
 class AuditActivityReportTests(TestCase):

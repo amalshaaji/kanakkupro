@@ -5,11 +5,11 @@
 
 {% block content %}
 <div class="mx-auto max-w-3xl">
-  {% include "partials/page_heading.html" with heading="Products and services" description="Add the name and operational details. Pricing and tax treatment remain unavailable until business financial settings are approved." %}
+  {% include "partials/page_heading.html" with heading="Products and services" description="Set the unit price and the GST classification selected for this item." %}
   <form class="card border border-base-300 bg-base-100 shadow-sm" method="post">
     {% csrf_token %}
     <div class="card-body grid gap-x-5 gap-y-3 sm:grid-cols-2">
-      <div class="alert alert-warning sm:col-span-2" role="status">Items saved here are not ready for invoicing. No prices or tax calculations are stored.</div>
+      <div class="alert alert-warning sm:col-span-2" role="status">Choose the correct HSN/SAC and GST rate for each item. The catalog does not determine tax rates or supply location automatically.</div>
       {% if form.non_field_errors %}<div class="alert alert-error sm:col-span-2" role="alert">{{ form.non_field_errors }}</div>{% endif %}
       {% for field in form %}<div class="{% if field.name == 'description' %}sm:col-span-2{% endif %}">{% include "partials/form_field.html" with field=field %}</div>{% endfor %}
       <div class="mt-3 flex flex-wrap gap-3 sm:col-span-2"><button class="btn btn-primary" type="submit">{% if is_create %}Save item{% else %}Save changes{% endif %}</button><a class="btn btn-ghost" href="{% if is_create %}{% url 'catalog:list' %}{% else %}{% url 'catalog:detail' item.id %}{% endif %}">Cancel</a></div>

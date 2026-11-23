@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.db.models import Q
@@ -93,6 +93,8 @@ def item_create(request):
             )
         except PermissionDenied:
             raise
+        except ValidationError as error:
+            form.add_error(None, ValidationError(error.messages))
         except IntegrityError:
             form.add_error(None, "This SKU is already used in this business.")
         else:
@@ -119,6 +121,8 @@ def item_update(request, item_id):
                 values=form.cleaned_data,
                 correlation_id=request.request_id,
             )
+        except ValidationError as error:
+            form.add_error(None, ValidationError(error.messages))
         except IntegrityError:
             form.add_error("sku", "This SKU is already used in this business.")
         else:

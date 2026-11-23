@@ -29,7 +29,7 @@ class CatalogManagementTests(TestCase):
             sku=sku,
         )
 
-    def test_create_item_without_financial_rules_and_record_actor(self):
+    def test_create_item_with_price_and_tax_setup_and_record_actor(self):
         other_tenant = Tenant.objects.create(name="Contoso", slug="contoso")
         response = self.client.post(
             reverse("catalog:create"),
@@ -40,6 +40,10 @@ class CatalogManagementTests(TestCase):
                 "sku": "SUPPORT-01",
                 "description": "  Remote support  ",
                 "unit": " hour ",
+                "price": "1250.2500",
+                "hsn_sac": "998314",
+                "tax_treatment": CatalogItem.TaxTreatment.TAXABLE,
+                "tax_rate": "18.0000",
             },
             follow=True,
         )
@@ -53,9 +57,9 @@ class CatalogManagementTests(TestCase):
         self.assertEqual(item.description, "Remote support")
         self.assertEqual(item.unit, "hour")
         self.assertEqual(item.created_by, self.owner)
-        self.assertFalse(hasattr(item, "price"))
-        self.assertFalse(hasattr(item, "tax_treatment"))
-        self.assertContains(response, "cannot be added to an invoice")
+        self.assertEqual(str(item.price), "1250.2500")
+        self.assertEqual(item.tax_treatment, CatalogItem.TaxTreatment.TAXABLE)
+        self.assertTrue(item.is_invoice_ready)
         event = AuditEvent.objects.get(entity_id=item.pk)
         self.assertEqual(event.action, "catalog_item.created")
         self.assertEqual(len(event.correlation_id), 32)
@@ -82,6 +86,10 @@ class CatalogManagementTests(TestCase):
                 "sku": "consulting",
                 "description": "",
                 "unit": "",
+                "price": "100.0000",
+                "hsn_sac": "998314",
+                "tax_treatment": CatalogItem.TaxTreatment.TAXABLE,
+                "tax_rate": "18.0000",
             },
         )
 
