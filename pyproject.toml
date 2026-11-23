@@ -1,0 +1,15 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+src = ["apps", "config"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"apps/*/migrations/*.py" = ["E501", "I001"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+addopts = "--strict-markers --reuse-db"

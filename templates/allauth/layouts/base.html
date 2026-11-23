@@ -1,0 +1,36 @@
+{% load static %}
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block head_title %}Account{% endblock %} | KankkuPro</title>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body class="min-h-screen bg-base-200 text-base-content">
+    {% include "partials/site_header.html" %}
+    <main class="mx-auto w-full max-w-xl px-5 py-12 md:px-10">
+      <section class="card border border-base-300 bg-base-100 shadow-sm">
+        <div class="card-body p-7 sm:p-9">
+          {% if messages %}
+            <div class="mb-5 space-y-2" aria-live="polite">
+              {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-info{% endif %}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% block content %}{% endblock %}
+        </div>
+      </section>
+    </main>
+    <script>
+      document.body.addEventListener("htmx:configRequest", (event) => {
+        const token = document.querySelector("[name=csrfmiddlewaretoken]")?.value;
+        if (token) event.detail.headers["X-CSRFToken"] = token;
+      });
+    </script>
+    {% block extra_body %}{% endblock %}
+  </body>
+</html>

@@ -1,0 +1,35 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@source "../../templates";
+
+@layer components {
+  main form p {
+    @apply mb-4;
+  }
+
+  main form p label {
+    @apply mb-1 block text-sm font-medium;
+  }
+
+  main form p input:not([type="checkbox"]),
+  main form p select {
+    @apply w-full rounded-lg border border-base-300 bg-base-100 px-3 py-2 text-base-content;
+  }
+
+  main form p input[type="checkbox"] {
+    @apply checkbox checkbox-primary;
+  }
+
+  main form button[type="submit"] {
+    @apply btn btn-primary mt-3 w-full;
+  }
+
+  main form ul.errorlist {
+    @apply mb-2 text-sm text-error;
+  }
+
+  main form p .helptext {
+    @apply mt-1 block text-xs text-base-content/60;
+  }
+}

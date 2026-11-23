@@ -1,0 +1,16 @@
+asgiref==3.13.0
+dj-database-url==3.1.2
+Django==5.2.19
+django-allauth==65.22.1
+django-unfold==0.110.1
+iniconfig==2.3.1
+packaging==26.3
+pluggy==1.7.0
+psycopg==3.3.9
+psycopg-binary==3.3.9
+Pygments==2.21.0
+pytest==8.4.2
+pytest-django==4.14.0
+ruff==0.17.6
+sqlparse==0.6.1
+whitenoise==6.12.0

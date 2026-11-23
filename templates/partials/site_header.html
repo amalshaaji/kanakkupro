@@ -1,0 +1,21 @@
+<header class="navbar border-b border-base-300 bg-base-100 px-5 md:px-10">
+  <div class="flex-1">
+    <a class="flex items-center gap-2 text-lg font-bold tracking-tight" href="{% url 'home' %}">
+      <span class="grid size-9 place-items-center rounded-xl bg-primary text-primary-content" aria-hidden="true">K</span>
+      KankkuPro
+    </a>
+  </div>
+  <nav aria-label="Main navigation" class="flex items-center gap-2">
+    {% if request.user.is_authenticated %}
+      <a class="btn btn-ghost btn-sm" href="{% url 'dashboard:index' %}">Dashboard</a>
+      <span class="hidden text-sm text-base-content/70 sm:inline">{{ request.user.email }}</span>
+      <form method="post" action="{% url 'account_logout' %}">
+        {% csrf_token %}
+        <button class="btn btn-outline btn-sm" type="submit">Sign out</button>
+      </form>
+    {% else %}
+      <a class="btn btn-ghost btn-sm" href="{% url 'account_login' %}">Sign in</a>
+      <a class="btn btn-primary btn-sm" href="{% url 'account_signup' %}">Create account</a>
+    {% endif %}
+  </nav>
+</header>
