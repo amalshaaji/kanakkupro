@@ -33,9 +33,18 @@ Also unresolved:
 - Payment overpayment, reversal/refund, and idempotency policy.
 - Financial retention and the production recovery objectives.
 
+## Proposed V1 scope for review (not approved)
+
+- Configure HSN/SAC and tax treatment per catalog item; do not assume 18% for every item.
+- Initially support regular GST-registered sellers and ordinary domestic supplies with a supported place-of-supply path. Defer composition sellers, reverse charge, SEZ, imports/exports, and e-invoicing until separately scoped.
+- Use invoice numbers in the form `KP/YY-YY/000001`, consecutively unique within each financial year. This pattern is 15 characters and remains within the referenced 16-character limit.
+- Round each line tax component half-up to paise and retain invoice tax totals in paise. Apply nearest-rupee rounding only to statutory payable/refundable amounts where required, subject to accountant confirmation.
+- Keep drafts editable and issued invoices immutable. Correct issued documents with linked credit/debit notes and audit events.
+- Allow partial payments, reject overpayments, and preserve reversals as append-only records with actor, reason, and idempotency protection.
+
 ## Decision
 
-Apply only the market defaults above to new tenant workspaces. Do not create invoice/payment schema or calculate tax until the unresolved scope and financial document policies are signed off. Existing workspaces are not changed by these defaults.
+Apply only the market defaults above to new tenant workspaces. Do not create invoice/payment schema or calculate tax until the unresolved scope and financial document policies are signed off. Existing workspaces are not changed by these defaults. The V1 scope above remains a proposal until approved.
 
 ## Official references consulted
 
