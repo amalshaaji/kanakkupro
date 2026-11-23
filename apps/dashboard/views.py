@@ -3,6 +3,7 @@ from django.shortcuts import redirect, render
 
 from apps.catalog.models import CatalogItem
 from apps.customers.models import Customer
+from apps.sales.selectors import financial_summary
 from apps.tenants.permissions import membership_has_permission
 
 
@@ -18,6 +19,7 @@ def dashboard(request):
         request,
         "pages/dashboard.html",
         {
+            "financial_summary": financial_summary(request.tenant),
             "can_manage_team": membership_has_permission(
                 request.tenant_membership, "team.manage"
             ),

@@ -62,6 +62,8 @@ INSTALLED_APPS = [
     "apps.audit.apps.AuditConfig",
     "apps.customers.apps.CustomersConfig",
     "apps.catalog.apps.CatalogConfig",
+    "apps.sales.apps.SalesConfig",
+    "apps.payments.apps.PaymentsConfig",
     "apps.reports.apps.ReportsConfig",
     "apps.health.apps.HealthConfig",
     "apps.dashboard.apps.DashboardConfig",

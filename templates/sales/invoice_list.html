@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Invoices | KankkuPro{% endblock %}
+{% block breadcrumbs %}{% include "partials/breadcrumbs.html" with current_page="Invoices" %}{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+  {% include "partials/page_heading.html" with heading="Invoices" description="Draft, issue, and track customer invoices and linked correction notes." %}
+  <div class="flex flex-wrap gap-2">{% if can_settings %}<a class="btn btn-outline" href="{% url 'sales:settings' %}">Invoice settings</a>{% endif %}{% if can_manage %}<a class="btn btn-primary" href="{% url 'sales:create' %}">New invoice</a>{% endif %}</div>
+</div>
+<form method="get" class="mb-6 flex flex-wrap items-end gap-3">
+  <div class="min-w-0 flex-1"><label class="label" for="invoice-search">Search invoices</label><input class="input input-bordered w-full" id="invoice-search" type="search" name="q" value="{{ search }}" placeholder="Invoice number or customer"></div>
+  <div><label class="label" for="invoice-state">State</label><select class="select select-bordered" id="invoice-state" name="state"><option value="all">All documents</option><option value="draft" {% if state_filter == 'draft' %}selected{% endif %}>Draft</option><option value="issued" {% if state_filter == 'issued' %}selected{% endif %}>Issued</option></select></div>
+  <button class="btn btn-outline" type="submit">Filter</button>
+</form>
+<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+  <table class="table table-zebra"><thead><tr><th scope="col">Document</th><th scope="col">Customer</th><th scope="col">Date</th><th scope="col">Total</th><th scope="col">Status</th><th scope="col">Outstanding</th></tr></thead><tbody>
+    {% for invoice in page_obj %}<tr><th scope="row"><a class="link link-primary" href="{% url 'sales:detail' invoice.id %}">{{ invoice }}</a><span class="mt-1 block text-xs font-normal">{{ invoice.get_kind_display }}</span></th><td>{% if invoice.is_draft %}{{ invoice.customer }}{% else %}{{ invoice.buyer_snapshot.name }}{% endif %}</td><td class="whitespace-nowrap">{{ invoice.issue_date|date:'d M Y' }}</td><td class="whitespace-nowrap">INR {{ invoice.total|floatformat:2 }}</td><td>{% if invoice.kind == 'invoice' %}{{ invoice.financials.status }}{% else %}{{ invoice.get_state_display }}{% endif %}{% if invoice.is_overdue %}<span class="badge badge-error badge-outline ml-1">Overdue</span>{% endif %}</td><td class="whitespace-nowrap">{% if invoice.kind == 'invoice' and not invoice.is_draft %}INR {{ invoice.outstanding_amount|floatformat:2 }}{% else %}—{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="6" class="py-12 text-center">No invoices match this view.{% if can_manage %} <a class="link link-primary" href="{% url 'sales:create' %}">Create your first invoice</a>.{% endif %}</td></tr>{% endfor %}
+  </tbody></table>
+</div>
+{% if page_obj.has_other_pages %}<nav class="mt-4 flex justify-between" aria-label="Invoice pages">{% if page_obj.has_previous %}<a class="btn btn-outline btn-sm" href="?q={{ search|urlencode }}&amp;state={{ state_filter|urlencode }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>{% else %}<span></span>{% endif %}<span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a class="btn btn-outline btn-sm" href="?q={{ search|urlencode }}&amp;state={{ state_filter|urlencode }}&amp;page={{ page_obj.next_page_number }}">Next</a>{% endif %}</nav>{% endif %}
+{% endblock %}

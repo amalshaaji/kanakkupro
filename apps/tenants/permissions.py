@@ -22,5 +22,13 @@ def membership_has_permission(membership, permission):
         return True
     if permission == "reports.export":
         return membership.role in REPORT_EXPORT_ROLES
+    if permission in {"invoices.view", "payments.view"}:
+        return True
+    if permission in {"invoices.manage", "invoices.issue", "payments.record"}:
+        return membership.role in CUSTOMER_MANAGE_ROLES
+    if permission in {"invoices.correct", "payments.reverse"}:
+        return membership.role in CATALOG_MANAGE_ROLES
+    if permission == "business.manage":
+        return membership.role in TEAM_MANAGE_ROLES
 
     return False

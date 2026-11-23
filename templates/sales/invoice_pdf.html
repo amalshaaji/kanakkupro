@@ -1,0 +1,29 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{{ document_title }} {{ invoice.number }}</title>
+<style>
+@page { size: A4 landscape; margin: 16mm 13mm 19mm; @bottom-left { content: "KankkuPro · " string(document-number); font: 9pt sans-serif; color: #64748b; } @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 9pt sans-serif; color: #64748b; } }
+body { font: 10pt sans-serif; color: #172033; line-height: 1.45; }
+h1 { font-size: 23pt; margin: 0; color: #312e81; } h2 { font-size: 11pt; margin: 0 0 5pt; }
+.header { border-bottom: 2pt solid #4f46e5; padding-bottom: 10pt; margin-bottom: 12pt; }
+.number { string-set: document-number content(); font-size: 13pt; font-weight: bold; }
+.columns { display: table; width: 100%; table-layout: fixed; margin-bottom: 12pt; }
+.column { display: table-cell; vertical-align: top; padding-right: 18pt; }
+.address { white-space: pre-wrap; overflow-wrap: anywhere; }
+.muted { color: #64748b; } p { margin: 3pt 0; }
+table { border-collapse: collapse; width: 100%; font-size: 9pt; table-layout: fixed; }
+thead { display: table-header-group; } th { background: #eef2ff; text-align: left; }
+th, td { border-bottom: .5pt solid #cbd5e1; padding: 7pt 5pt; vertical-align: top; overflow-wrap: anywhere; }
+tr { break-inside: avoid; } .amount { text-align: right; font-variant-numeric: tabular-nums; }
+.closing { display: table; width: 100%; table-layout: fixed; margin-top: 14pt; break-inside: avoid; }
+.terms { display: table-cell; width: 58%; padding-right: 20pt; vertical-align: top; }
+.totals-cell { display: table-cell; width: 42%; vertical-align: top; }
+.totals { width: 100%; margin: 0; break-inside: avoid; }
+.grand { font-size: 12pt; font-weight: bold; background: #eef2ff; }
+.footer { break-inside: avoid; } .signature { margin-top: 25pt; border-top: .5pt solid #94a3b8; padding-top: 5pt; width: 230pt; }
+</style></head><body>
+<div class="header"><h1>{{ document_title }}</h1><p class="number">{{ invoice.number }}</p><p>Issue date: {{ invoice.issue_date|date:'d M Y' }} · Due date: {{ invoice.due_date|date:'d M Y' }} · Currency: INR</p>{% if invoice.parent %}<p>Against {{ invoice.parent.number }} dated {{ invoice.parent.issue_date|date:'d M Y' }} · {{ invoice.reason }}</p>{% endif %}<p class="muted">Original for recipient</p></div>
+<div class="columns"><div class="column"><h2>Supplier</h2><p><strong>{{ invoice.seller_snapshot.legal_name }}</strong></p><p class="address">{{ invoice.seller_snapshot.address }}</p><p>GSTIN: {{ invoice.seller_snapshot.gstin }}</p><p>{{ seller_state }} ({{ invoice.seller_snapshot.state_code }})</p></div><div class="column"><h2>Recipient</h2><p><strong>{{ invoice.buyer_snapshot.name }}</strong></p><p class="address">{{ invoice.buyer_snapshot.address }}</p><p>GSTIN: {{ invoice.buyer_snapshot.gstin|default:'Unregistered' }}</p><p>{{ buyer_state }} ({{ invoice.buyer_state }})</p></div><div class="column"><h2>Supply and delivery</h2><p>Place of supply: {{ supply_state }} ({{ invoice.place_of_supply }})</p><p>{{ invoice.get_supply_type_display }}</p><p class="address">{{ invoice.delivery_address }}</p><p>Reverse charge: No</p></div></div>
+<table><colgroup><col style="width:20%"><col style="width:7%"><col style="width:9%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:6%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:9%"></colgroup><thead><tr><th>Description</th><th>HSN/SAC</th><th>Qty / unit</th><th class="amount">Unit price</th><th class="amount">Discount</th><th class="amount">Taxable</th><th class="amount">GST %</th><th class="amount">CGST</th><th class="amount">SGST</th><th class="amount">IGST</th><th class="amount">Total</th></tr></thead><tbody>
+{% for line in lines %}<tr><td>{{ line.description }}</td><td>{{ line.hsn_sac }}</td><td>{{ line.quantity|floatformat:'-4' }} {{ line.unit }}</td><td class="amount">{{ line.unit_price|floatformat:'-4' }}</td><td class="amount">{{ line.discount|floatformat:2 }}</td><td class="amount">{{ line.taxable_amount|floatformat:2 }}</td><td class="amount">{{ line.tax_rate|floatformat:'-4' }}</td><td class="amount">{{ line.cgst|floatformat:2 }}</td><td class="amount">{{ line.sgst|floatformat:2 }}</td><td class="amount">{{ line.igst|floatformat:2 }}</td><td class="amount">{{ line.total|floatformat:2 }}</td></tr>{% endfor %}
+</tbody></table>
+<div class="closing"><div class="terms"><div class="footer">{% if invoice.notes %}<h2>Notes</h2><p class="address">{{ invoice.notes }}</p>{% endif %}{% if invoice.seller_snapshot.payment_instructions %}<h2>Payment instructions</h2><p class="address">{{ invoice.seller_snapshot.payment_instructions }}</p>{% endif %}<div class="signature">{{ invoice.seller_snapshot.signatory }}<br><span class="muted">Authorized signatory</span></div></div></div><div class="totals-cell"><table class="totals"><tr><td>Taxable value</td><td class="amount">{{ invoice.taxable_total|floatformat:2 }}</td></tr><tr><td>CGST</td><td class="amount">{{ invoice.cgst|floatformat:2 }}</td></tr><tr><td>SGST</td><td class="amount">{{ invoice.sgst|floatformat:2 }}</td></tr><tr><td>IGST</td><td class="amount">{{ invoice.igst|floatformat:2 }}</td></tr><tr class="grand"><td>Total (INR)</td><td class="amount">{{ invoice.total|floatformat:2 }}</td></tr></table></div></div>
+</body></html>

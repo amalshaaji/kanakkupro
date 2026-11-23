@@ -14,6 +14,7 @@ from apps.customers.services import (
     set_customer_status,
     update_customer,
 )
+from apps.sales.selectors import with_balances
 from apps.tenants.permissions import membership_has_permission
 
 
@@ -65,6 +66,14 @@ def customer_detail(request, customer_id):
         "customers/customer_detail.html",
         {
             "customer": customer,
+            "invoice_page": Paginator(
+                with_balances(
+                    customer.invoices.filter(
+                        tenant=request.tenant, kind="invoice"
+                    ).select_related("tenant")
+                ),
+                10,
+            ).get_page(request.GET.get("invoice_page")),
             "can_manage_customers": membership_has_permission(
                 request.tenant_membership, "customers.manage"
             ),

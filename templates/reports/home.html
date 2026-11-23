@@ -4,6 +4,7 @@
 {% block breadcrumbs %}{% include "partials/breadcrumbs.html" with current_page="Reports" %}{% endblock %}
 
 {% block content %}
+{% include "sales/financial_summary.html" %}
 {% include "partials/page_heading.html" with eyebrow=request.tenant.name heading="Reports" description="A snapshot of customer, catalog, and team activity in this business." %}
 
 <div class="alert alert-info mb-6" role="status">

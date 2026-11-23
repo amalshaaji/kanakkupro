@@ -1,6 +1,6 @@
 <div class="form-control min-w-0 gap-1">
-  <label class="label" for="{{ field.id_for_label }}">
-    <span class="label-text font-medium">{{ field.label }}</span>
+  <label class="label flex flex-wrap whitespace-normal" for="{{ field.id_for_label }}">
+    <span class="label-text min-w-0 whitespace-normal font-medium">{{ field.label }}</span>
     {% if field.field.required %}<span class="label-text-alt" aria-hidden="true">Required</span>{% endif %}
   </label>
   {{ field }}

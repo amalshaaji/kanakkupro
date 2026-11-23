@@ -37,7 +37,8 @@
   <article class="card border border-base-300 bg-base-100 shadow-sm">
     <div class="card-body">
       <h2 class="card-title">Invoice history</h2>
-      <p class="text-sm leading-6 text-base-content/70">Invoice history will appear here when sales invoicing is available.</p>
+      <ul class="space-y-3">{% for invoice in invoice_page %}<li><a class="link link-primary" href="{% url 'sales:detail' invoice.id %}">{{ invoice }}</a> · INR {{ invoice.total|floatformat:2 }} · {{ invoice.financials.status }}</li>{% empty %}<li class="text-sm text-base-content/70">No invoices for this customer yet.</li>{% endfor %}</ul>
+      {% if invoice_page.has_other_pages %}<nav class="mt-3 flex justify-between" aria-label="Customer invoice pages">{% if invoice_page.has_previous %}<a class="link" href="?invoice_page={{ invoice_page.previous_page_number }}">Previous</a>{% endif %}{% if invoice_page.has_next %}<a class="link" href="?invoice_page={{ invoice_page.next_page_number }}">Next</a>{% endif %}</nav>{% endif %}
       <p class="text-xs text-base-content/60">Customer details shown on issued invoices will be preserved as a billing snapshot.</p>
     </div>
   </article>

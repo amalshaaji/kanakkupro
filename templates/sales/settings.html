@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Invoice settings | KankkuPro{% endblock %}
+{% block breadcrumbs %}{% include "partials/breadcrumbs.html" with current_page="Invoice settings" %}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl">
+  {% include "partials/page_heading.html" with heading="Invoice settings" description="Enter the legal identity of the regular GST-registered seller. Issued documents retain their own copy of these details." %}
+  <form method="post" class="card border border-base-300 bg-base-100"><div class="card-body gap-4">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    {% for field in form %}{% include "partials/form_field.html" with field=field %}{% endfor %}
+    <p class="text-sm text-base-content/70">GSTIN checks validate format and checksum. Registration status and the applicable tax rules must be verified by the business.</p>
+    <div class="mt-4 flex gap-3"><button class="btn btn-primary" type="submit">Save settings</button><a class="btn btn-ghost" href="{% url 'sales:list' %}">Cancel</a></div>
+  </div></form>
+</div>
+{% endblock %}

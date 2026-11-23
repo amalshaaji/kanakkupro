@@ -1,0 +1,10 @@
+<section class="mb-8" aria-label="Financial summary">
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 class="text-xl font-semibold">Sales and receivables</h2><a class="btn btn-outline btn-sm" href="{% url 'sales:list' %}">View invoices</a></div>
+  <p class="mb-4 text-sm text-base-content/70">All-time issued invoices, net of issued credit/debit notes and reversed payments. Overdue dates use the workspace time zone.</p>
+  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <article class="card border border-base-300 bg-base-100"><div class="card-body"><h3 class="text-sm">Net invoiced</h3><p class="text-2xl font-semibold">INR {{ financial_summary.invoiced|floatformat:2 }}</p></div></article>
+    <article class="card border border-base-300 bg-base-100"><div class="card-body"><h3 class="text-sm">Net receipts</h3><p class="text-2xl font-semibold">INR {{ financial_summary.receipts|floatformat:2 }}</p></div></article>
+    <article class="card border border-base-300 bg-base-100"><div class="card-body"><h3 class="text-sm">Outstanding</h3><p class="text-2xl font-semibold">INR {{ financial_summary.receivables|floatformat:2 }}</p></div></article>
+    <article class="card border border-base-300 bg-base-100"><div class="card-body"><h3 class="text-sm">Overdue</h3><p class="text-2xl font-semibold">INR {{ financial_summary.overdue|floatformat:2 }}</p><p class="text-xs">{{ financial_summary.overdue_count }} invoice{{ financial_summary.overdue_count|pluralize }}</p></div></article>
+  </div>
+</section>

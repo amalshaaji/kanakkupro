@@ -4,3 +4,4 @@ django-allauth>=65.22,<66
 django-unfold>=0.72,<1
 psycopg[binary]>=3.2,<4
 whitenoise>=6.8,<7
+weasyprint>=70,<71

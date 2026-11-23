@@ -10,6 +10,7 @@ from apps.audit.models import AuditEvent
 from apps.catalog.models import CatalogItem
 from apps.customers.models import Customer
 from apps.reports.permissions import tenant_permission_required
+from apps.sales.selectors import financial_summary
 from apps.tenants.models import Invitation, TenantMembership
 from apps.tenants.permissions import REPORT_EXPORT_ROLES
 
@@ -40,6 +41,7 @@ def report_home(request):
         "reports/home.html",
         {
             "customer_counts": customer_counts,
+            "financial_summary": financial_summary(tenant),
             "catalog_counts": catalog_counts,
             "member_count": TenantMembership.objects.filter(
                 tenant=tenant, status=TenantMembership.Status.ACTIVE

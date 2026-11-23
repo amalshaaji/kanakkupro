@@ -1,12 +1,13 @@
 # KankkuPro ERP
 
-KankkuPro is a multi-tenant business workspace built as a Django modular monolith. The repository contains the project foundation, email identity flows, tenant onboarding and team invitations, a shared responsive UI shell, tenant-scoped customer management, and basic product/service catalog records. Financial workflows are not enabled yet.
+KankkuPro is a multi-tenant business workspace built as a Django modular monolith. It provides email identity flows, business onboarding and teams, customer/catalog management, India V1 invoice drafts and issuance, PDF downloads, linked correction notes, payment recording/reversals, and financial dashboard totals.
 
 ## Requirements
 
 - Python 3.12+
 - PostgreSQL 15+ (Neon PostgreSQL is the hosted target)
 - Node.js 22+ and npm
+- Pango native libraries for WeasyPrint PDFs (`brew install pango` on macOS)
 
 The application deliberately uses PostgreSQL for development and tests. It does not configure SQLite as a fallback.
 
@@ -80,7 +81,11 @@ Tests use the PostgreSQL URL in `DATABASE_URL`. GitHub Actions starts PostgreSQL
 
 Catalog forms require a nonnegative unit price (up to four decimal places), a numeric HSN/SAC code, and a selected tax treatment. Taxable items require a positive rate; exempt items store a zero rate. Rates and codes must be selected by the business; the application checks their format and consistency, not their legal applicability. Prices use the workspace currency, which defaults to INR for new workspaces.
 
-Apply `catalog.0002_item_pricing_and_tax_classification` with `python manage.py migrate` before using this update. This additive migration leaves existing items with empty pricing/classification fields; it does not assign prices, codes, or rates. Edit those items to complete their setup. Catalog CSV exports include price, currency, HSN/SAC, tax treatment, and tax rate, preserving four-decimal precision. Invoice issuance, payments, and PDFs remain the next implementation slice.
+Apply all migrations with `python manage.py migrate` before using this update. The additive catalog migration leaves existing items with empty pricing/classification fields; it does not assign prices, codes, or rates. Edit those items to complete their setup. Catalog CSV exports include price, currency, HSN/SAC, tax treatment, and tax rate, preserving four-decimal precision.
+
+### Invoices and payments
+
+Open `/invoices/` and complete **Invoice settings** as an Owner/Admin. Complete the customer's Indian billing address/country and catalog tax details, then create and issue a draft. Issued details are immutable; linked credit/debit notes preserve corrections. Partial/final payments and append-only reversals reconcile with dashboard balances. PDF downloads use stored snapshots and totals. See [Financial workflow](docs/financial-workflow.md) for the supported India V1 scope, calculation order, roles, numbering, migrations, deployment steps, and limitations.
 
 ## Settings and deployment
 
@@ -92,4 +97,8 @@ Set `DJANGO_SETTINGS_MODULE=config.settings.production` in the deployment enviro
 
 ## Implemented phases
 
-Phases 1–4 are implemented across `accounts`, `tenants`, and `dashboard`; Phase 5 customer management is implemented in `customers`, with foundational product/service records in `catalog`. Customer records support tenant-scoped search, pagination, billing contact details, role-checked editing, and reversible archive/restore. Catalog records support tenant-scoped search, case-insensitive tenant-unique SKUs, prices to four decimal places, per-item HSN/SAC and GST treatment/rate, plus archive/restore. Legacy catalog rows without financial classification remain non-invoice-ready. Phase 6 groundwork includes append-only audit events and tenant-scoped operational reports for customer/catalog/team counts and recent activity. CSV exports are tenant-scoped, role-restricted, protected from spreadsheet formula injection, and bounded at 10,000 rows. PostgreSQL rejects audit event updates and deletes. The UI uses Django templates, HTMX, Tailwind CSS v4, and DaisyUI 5, with a responsive workspace shell and accessible form feedback. New tenant workspaces default to India (`IN`), INR, and `Asia/Kolkata`; existing workspaces are unchanged. The approved India launch, retention, and recovery decisions are recorded in [ADR-001](docs/decisions/ADR-001-india-launch.md). A pure per-line GST calculator is implemented in `apps/sales`; invoice persistence/PDFs, payments, and financial reporting remain to be implemented. The active tenant is stored in the session but resolved from a current active membership on each request. Tenant creation and owner membership commit atomically. Owner and Admin roles can invite members; invitation links are hashed at rest, bound to the invited verified email, expire after seven days by default, and require a CSRF-protected POST to accept. Customer-specific place-of-supply data and invoice workflows remain future work. Subscription billing, inventory, and production monitoring remain later phases.
+Phases 1–4 provide the foundation, email authentication, shared UI, and tenant onboarding/memberships/invitations. Phase 5 provides tenant-scoped customers and catalog, invoice drafts and transactional issuance, immutable snapshots and PDFs, linked credit/debit notes, payment posting/reversals, customer invoice history, and financial dashboard/report totals under the supported India V1 scope.
+
+Phase 6 groundwork includes append-only audit events, operational reports, bounded CSV exports, health probes, structured logs, and secure production settings. Provider-specific monitoring, recovery verification, performance/security review, and pilot readiness remain outstanding. Subscription billing and inventory remain later phases.
+
+The active tenant is resolved from current membership on every request. Financial writes revalidate permissions, protect duplicate requests, and commit audit events atomically. See [ADR-001](docs/decisions/ADR-001-india-launch.md), [Financial workflow](docs/financial-workflow.md), and [Operations](docs/operations.md) for scope and deployment requirements.
