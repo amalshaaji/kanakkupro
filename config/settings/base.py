@@ -7,6 +7,38 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "request_context": {"()": "config.logging.RequestContextFilter"},
+    },
+    "formatters": {
+        "safe_json": {"()": "config.logging.SafeJsonFormatter"},
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["request_context"],
+            "formatter": "safe_json",
+        },
+    },
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "django.security": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "kanakkupro": {"handlers": ["console"], "level": "INFO", "propagate": False},
+    },
+}
+
 SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = False
 ALLOWED_HOSTS = [
@@ -30,6 +62,8 @@ INSTALLED_APPS = [
     "apps.audit.apps.AuditConfig",
     "apps.customers.apps.CustomersConfig",
     "apps.catalog.apps.CatalogConfig",
+    "apps.reports.apps.ReportsConfig",
+    "apps.health.apps.HealthConfig",
     "apps.dashboard.apps.DashboardConfig",
 ]
 

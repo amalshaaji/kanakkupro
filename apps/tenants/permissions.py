@@ -1,6 +1,7 @@
 TEAM_MANAGE_ROLES = {"owner", "admin"}
 CUSTOMER_MANAGE_ROLES = {"owner", "admin", "manager", "staff"}
 CATALOG_MANAGE_ROLES = {"owner", "admin", "manager"}
+REPORT_EXPORT_ROLES = {"owner", "admin", "manager"}
 
 
 def membership_has_permission(membership, permission):
@@ -17,5 +18,9 @@ def membership_has_permission(membership, permission):
         return True
     if permission == "catalog.manage":
         return membership.role in CATALOG_MANAGE_ROLES
+    if permission == "reports.view":
+        return True
+    if permission == "reports.export":
+        return membership.role in REPORT_EXPORT_ROLES
 
     return False

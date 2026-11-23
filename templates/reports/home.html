@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Reports | KankkuPro{% endblock %}
+{% block breadcrumbs %}{% include "partials/breadcrumbs.html" with current_page="Reports" %}{% endblock %}
+
+{% block content %}
+{% include "partials/page_heading.html" with eyebrow=request.tenant.name heading="Reports" description="A snapshot of customer, catalog, and team activity in this business." %}
+
+<div class="alert alert-info mb-6" role="status">
+  <span>Financial totals and sales reports will appear after invoicing and payments are available. Activity timestamps below are shown in UTC.</span>
+</div>
+
+<section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Business overview">
+  <article class="card border border-base-300 bg-base-100 shadow-sm"><div class="card-body"><p class="text-sm text-base-content/60">Active customers</p><p class="text-3xl font-semibold">{{ customer_counts.active }}</p><p class="text-sm text-base-content/60">{{ customer_counts.archived }} archived</p></div></article>
+  <article class="card border border-base-300 bg-base-100 shadow-sm"><div class="card-body"><p class="text-sm text-base-content/60">Active catalog items</p><p class="text-3xl font-semibold">{{ catalog_counts.active }}</p><p class="text-sm text-base-content/60">{{ catalog_counts.archived }} archived</p></div></article>
+  <article class="card border border-base-300 bg-base-100 shadow-sm"><div class="card-body"><p class="text-sm text-base-content/60">Team members</p><p class="text-3xl font-semibold">{{ member_count }}</p><p class="text-sm text-base-content/60">Active memberships</p></div></article>
+  <article class="card border border-base-300 bg-base-100 shadow-sm"><div class="card-body"><p class="text-sm text-base-content/60">Pending invitations</p><p class="text-3xl font-semibold">{{ pending_invitation_count }}</p><p class="text-sm text-base-content/60">Current, unexpired invitations</p></div></article>
+</section>
+
+<section class="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]" aria-label="Report details">
+  <div>
+    <h2 class="mb-3 text-xl font-semibold">Recent activity</h2>
+    <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+      <table class="table table-zebra">
+        <thead><tr><th scope="col">Activity</th><th scope="col">By</th><th scope="col">When (UTC)</th></tr></thead>
+        <tbody>
+          {% for event in recent_events %}
+            <tr><th scope="row"><span>{{ event.action }}</span><div class="text-xs font-normal text-base-content/60">{{ event.entity_type }}{% if event.entity_id %} · {{ event.entity_id }}{% endif %}</div></th><td>{% if not event.actor %}System{% elif can_view_actor_names %}{{ event.actor.email }}{% else %}Team member{% endif %}</td><td>{{ event.created_at|date:"Y-m-d H:i" }} UTC</td></tr>
+          {% empty %}
+            <tr><td colspan="3" class="py-10 text-center"><p class="font-medium">No activity recorded yet.</p><p class="mt-1 text-sm text-base-content/60">Tenant and business changes will appear here.</p></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-2 text-xs text-base-content/60">Showing the latest 25 events. Event metadata excludes customer contact details and invitation tokens.</p>
+  </div>
+
+  <aside class="card h-fit border border-base-300 bg-base-100 shadow-sm" aria-labelledby="exports-heading">
+    <div class="card-body">
+      <h2 class="card-title" id="exports-heading">Data exports</h2>
+      {% if can_export %}
+        <p class="text-sm leading-6 text-base-content/70">Exports are limited to this business and 10,000 rows.</p>
+        <a class="btn btn-outline btn-sm" href="{% url 'reports:export_customers' %}">Download customers CSV</a>
+        <a class="btn btn-outline btn-sm" href="{% url 'reports:export_catalog' %}">Download catalog CSV</a>
+      {% else %}
+        <p class="text-sm leading-6 text-base-content/70">Exports are available to Owners, Admins, and Managers.</p>
+      {% endif %}
+    </div>
+  </aside>
+</section>
+{% endblock %}

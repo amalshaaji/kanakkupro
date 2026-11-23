@@ -1,3 +1,4 @@
+from apps.common.request_context import tenant_id_context
 from apps.tenants.models import TenantMembership
 from apps.tenants.permissions import membership_has_permission
 
@@ -49,4 +50,10 @@ class ActiveTenantMiddleware:
             else:
                 request.session.pop(ACTIVE_TENANT_SESSION_KEY, None)
 
-        return self.get_response(request)
+        tenant_token = tenant_id_context.set(
+            str(request.tenant.pk) if request.tenant else "-"
+        )
+        try:
+            return self.get_response(request)
+        finally:
+            tenant_id_context.reset(tenant_token)

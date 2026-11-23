@@ -7,6 +7,7 @@ from django.core.exceptions import ImproperlyConfigured
 from .base import *  # noqa: F403
 
 DEBUG = False
+os.environ.setdefault("APP_ENV", "production")
 if not SECRET_KEY:  # noqa: F405
     raise ImproperlyConfigured("SECRET_KEY must be set in production.")
 if not ALLOWED_HOSTS:  # noqa: F405
