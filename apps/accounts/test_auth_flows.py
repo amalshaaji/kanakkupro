@@ -144,4 +144,8 @@ class AuthenticationRateLimitTests(TestCase):
         second_response = self.client.post(reverse("account_login"), credentials)
 
         self.assertEqual(first_response.status_code, 200)
-        self.assertEqual(second_response.status_code, 429)
+        self.assertEqual(second_response.status_code, 200)
+        self.assertContains(
+            second_response, "Too many failed login attempts. Try again later."
+        )
+        self.assertNotIn("_auth_user_id", self.client.session)

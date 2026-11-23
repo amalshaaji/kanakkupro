@@ -10,7 +10,7 @@ class TenantModelTests(TestCase):
         tenant = Tenant.objects.create(name="Northwind", slug="northwind")
 
         self.assertEqual(tenant._meta.pk.get_internal_type(), "UUIDField")
-        self.assertEqual(tenant.timezone, "UTC")
+        self.assertEqual(tenant.timezone, "Asia/Kolkata")
         self.assertEqual(tenant.status, Tenant.Status.ACTIVE)
 
     def test_tenant_membership_links_user_and_tenant(self):
