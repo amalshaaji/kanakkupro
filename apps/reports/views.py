@@ -22,13 +22,13 @@ def report_home(request):
     tenant = request.tenant
     customer_counts = Customer.objects.filter(tenant=tenant).aggregate(
         total=Count("id"),
-        active=Count("id", filter=Q(status=Customer.Status.ACTIVE)),
-        archived=Count("id", filter=Q(status=Customer.Status.INACTIVE)),
+        active_count=Count("id", filter=Q(status=Customer.Status.ACTIVE)),
+        archived_count=Count("id", filter=Q(status=Customer.Status.INACTIVE)),
     )
     catalog_counts = CatalogItem.objects.filter(tenant=tenant).aggregate(
         total=Count("id"),
-        active=Count("id", filter=Q(active=True)),
-        archived=Count("id", filter=Q(active=False)),
+        active_count=Count("id", filter=Q(active=True)),
+        archived_count=Count("id", filter=Q(active=False)),
     )
     recent_events = (
         AuditEvent.objects.filter(tenant=tenant)

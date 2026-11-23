@@ -7,8 +7,14 @@ from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from apps.tenants.models import Tenant, TenantMembership
+
 
 class SignupAndEmailVerificationTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        mail.outbox.clear()
+
     def test_signup_requires_email_confirmation_before_login(self):
         response = self.client.post(
             reverse("account_signup"),
@@ -41,9 +47,7 @@ class SignupAndEmailVerificationTests(TestCase):
             },
         )
         email_address = EmailAddress.objects.get(email="new-owner@example.com")
-        match = re.search(
-            r"/accounts/confirm-email/([^/\s]+)", mail.outbox[0].body
-        )
+        match = re.search(r"/accounts/confirm-email/([^/\s]+)", mail.outbox[0].body)
         self.assertIsNotNone(match)
         confirm_url = reverse("account_confirm_email", kwargs={"key": match.group(1)})
 
@@ -59,6 +63,10 @@ class SignupAndEmailVerificationTests(TestCase):
 
 
 class LoginAndPasswordResetTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        mail.outbox.clear()
+
     def create_verified_user(self, email="owner@example.com"):
         user = get_user_model().objects.create_user(
             email, password="a-long-and-strong-password-42"
@@ -70,6 +78,10 @@ class LoginAndPasswordResetTests(TestCase):
 
     def test_allauth_login_and_post_logout(self):
         user = self.create_verified_user()
+        tenant = Tenant.objects.create(name="Northwind", slug="northwind")
+        TenantMembership.objects.create(
+            tenant=tenant, user=user, role=TenantMembership.Role.OWNER
+        )
 
         response = self.client.post(
             reverse("account_login"),
@@ -96,10 +108,11 @@ class LoginAndPasswordResetTests(TestCase):
         )
         self.assertIsNotNone(reset_match)
         reset_path = reset_match.group("path").rstrip(".,)")
-        response = self.client.get(reset_path)
+        response = self.client.get(reset_path, follow=True)
         self.assertEqual(response.status_code, 200)
+        reset_form_path = response.wsgi_request.path
         response = self.client.post(
-            reset_path,
+            reset_form_path,
             {
                 "password1": "a-different-strong-password-73",
                 "password2": "a-different-strong-password-73",

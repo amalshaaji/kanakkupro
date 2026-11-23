@@ -16,9 +16,9 @@ class Tenant(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, unique=True)
-    country = models.CharField(max_length=2, blank=True)
-    currency = models.CharField(max_length=3, blank=True)
-    timezone = models.CharField(max_length=64, default="UTC")
+    country = models.CharField(max_length=2, default="IN")
+    currency = models.CharField(max_length=3, default="INR")
+    timezone = models.CharField(max_length=64, default="Asia/Kolkata")
     status = models.CharField(
         max_length=12, choices=Status.choices, default=Status.ACTIVE
     )

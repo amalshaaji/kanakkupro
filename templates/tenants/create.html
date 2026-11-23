@@ -8,7 +8,7 @@
 
 {% block content %}
 <div class="mx-auto max-w-2xl">
-  {% include "partials/page_heading.html" with eyebrow="Business setup" heading="Create your business workspace" description="You’ll become its owner. Country and currency can be filled in later once your business setup is confirmed." %}
+  {% include "partials/page_heading.html" with eyebrow="Business setup" heading="Create your business workspace" description="You’ll become its owner. India, INR, and India Standard Time are selected for your workspace." %}
   <form class="mt-8 space-y-5" method="post">
     {% csrf_token %}
     {% if form.non_field_errors %}<div class="alert alert-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
