@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 import dj_database_url
 
@@ -57,6 +58,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "allauth",
     "allauth.account",
+    "allauth.mfa",
     "apps.accounts.apps.AccountsConfig",
     "apps.tenants.apps.TenantsConfig",
     "apps.audit.apps.AuditConfig",
@@ -78,6 +80,8 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "apps.accounts.security.AdminMFAMiddleware",
+    "apps.accounts.security.PrivateResponseMiddleware",
     "apps.tenants.middleware.ActiveTenantMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -107,14 +111,18 @@ ASGI_APPLICATION = "config.asgi.application"
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/kanakkupro"
 )
+DATABASE_HOST = urlsplit(DATABASE_URL).hostname or ""
+DATABASE_IS_POOLED = "-pooler" in DATABASE_HOST
+DATABASE_SSL_MODE = parse_qs(urlsplit(DATABASE_URL).query).get("sslmode", [None])[-1]
 DATABASES = {
     "default": dj_database_url.parse(
         DATABASE_URL,
-        conn_max_age=0 if "-pooler" in DATABASE_URL else 60,
-        ssl_require=not DEBUG and "localhost" not in DATABASE_URL,
+        conn_max_age=0 if DATABASE_IS_POOLED else 60,
+        ssl_require=DATABASE_HOST not in {"localhost", "127.0.0.1", "::1", ""}
+        and DATABASE_SSL_MODE not in {"verify-ca", "verify-full"},
     )
 }
-if "-pooler" in DATABASE_URL:
+if DATABASE_IS_POOLED:
     DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
 
 AUTH_USER_MODEL = "accounts.User"
@@ -134,6 +142,17 @@ ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_PREVENT_ENUMERATION = True
 ACCOUNT_LOGOUT_ON_GET = False
+DEPLOYMENT_ENVIRONMENT = "development"
+MFA_ADAPTER = "apps.accounts.mfa.EncryptedMFAAdapter"
+MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
+MFA_TOTP_ISSUER = "KankkuPro"
+MFA_TRUST_ENABLED = False
+MFA_ENCRYPTION_KEYS = [
+    key.strip()
+    for key in os.environ.get("MFA_ENCRYPTION_KEYS", "").split(",")
+    if key.strip()
+]
+ADMIN_MFA_MAX_AGE = 900
 ACCOUNT_SESSION_REMEMBER = False
 ACCOUNT_RATE_LIMITS = {
     "login": "10/m/ip",

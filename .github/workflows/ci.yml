@@ -4,9 +4,13 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:16
@@ -41,5 +45,22 @@ jobs:
       - run: python manage.py check
       - run: python manage.py makemigrations --check --dry-run
       - run: pytest
+      - name: Production deployment checks
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.production
+          SECRET_KEY: ci-only-secret-0123456789-abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJKLMNOPQRSTUVWXYZ
+          ALLOWED_HOSTS: ci.example.test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/kanakkupro?sslmode=require
+          EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+          EMAIL_HOST: smtp.example.test
+          DEFAULT_FROM_EMAIL: no-reply@example.test
+          MFA_ENCRYPTION_KEYS: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+          SECURE_HSTS_SECONDS: "3600"
+        run: python manage.py check --deploy --fail-level WARNING
+      - name: Python dependency audit
+        run: |
+          python -m pip install --target "$RUNNER_TEMP/pip-audit" pip-audit==2.10.1
+          PYTHONPATH="$RUNNER_TEMP/pip-audit" python -m pip_audit -r requirements.lock --no-deps --disable-pip --strict --progress-spinner off
       - run: npm ci
+      - run: npm audit --audit-level=low
       - run: npm run build

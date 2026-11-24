@@ -20,6 +20,7 @@
   <div class="mt-6 border-t border-base-300 pt-4">
     <a class="btn btn-ghost mb-3 w-full justify-start {% if request.resolver_match.app_name == 'sales' or request.resolver_match.app_name == 'payments' %}menu-active{% endif %}" href="{% url 'sales:list' %}">Invoices</a>
     <p class="truncate px-3 text-xs text-base-content/60">Signed in as</p>
+    <a class="btn btn-ghost btn-sm mt-2 w-full justify-start" href="{% url 'mfa_index' %}">Account security</a>
     <p class="mt-1 truncate px-3 text-sm font-medium" title="{{ request.user.email }}">{{ request.user.email }}</p>
   </div>
 </nav>

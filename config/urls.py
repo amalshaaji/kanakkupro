@@ -1,6 +1,12 @@
+from allauth.account.decorators import secure_admin_login
+from allauth.mfa.models import Authenticator
 from apps.dashboard.views import home
 from django.contrib import admin
 from django.urls import include, path
+
+admin.site.login = secure_admin_login(admin.site.login)
+if admin.site.is_registered(Authenticator):
+    admin.site.unregister(Authenticator)
 
 urlpatterns = [
     path("admin/", admin.site.urls),

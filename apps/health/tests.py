@@ -8,6 +8,25 @@ from apps.health.views import live, ready
 
 
 class HealthCheckTests(SimpleTestCase):
+    @patch("apps.health.views.cache")
+    @patch("apps.health.views.connection")
+    def test_readiness_rejects_unavailable_authentication_cache(
+        self, database, auth_cache
+    ):
+        database.cursor.return_value.__enter__.return_value.fetchone.return_value = (1,)
+        auth_cache.get.side_effect = OperationalError("cache-secret")
+        response = ready(self.request)
+        self.assertEqual(response.status_code, 503)
+        self.assertNotIn("cache-secret", response.content.decode())
+
+    @patch("apps.health.views.cache")
+    @patch("apps.health.views.connection")
+    def test_readiness_cache_probe_does_not_write(self, database, auth_cache):
+        database.cursor.return_value.__enter__.return_value.fetchone.return_value = (1,)
+        self.assertEqual(ready(self.request).status_code, 200)
+        auth_cache.get.assert_called_once_with("kanakkupro.health.readiness")
+        auth_cache.set.assert_not_called()
+
     def setUp(self):
         self.request = RequestFactory().get("/health/")
         self.request.request_id = "request-id-123"

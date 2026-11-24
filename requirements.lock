@@ -1,11 +1,13 @@
 asgiref==3.13.0
 brotli==1.2.1
 cffi==2.1.1
+cryptography==50.0.2
 cssselect2==0.10.1
 dj-database-url==3.1.2
 Django==5.2.19
 django-allauth==65.22.1
 django-unfold==0.110.1
+fido2==2.2.1
 fonttools==4.68.0
 iniconfig==2.3.1
 packaging==26.3
@@ -18,8 +20,9 @@ pydyf==0.13.0
 Pygments==2.21.0
 pypdf==7.1.1
 pyphen==0.18.1
-pytest==8.4.2
+pytest==9.2.0
 pytest-django==4.14.0
+qrcode==8.2
 ruff==0.17.6
 sqlparse==0.6.1
 tinycss2==1.5.1

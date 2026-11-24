@@ -4,9 +4,14 @@ import os
 
 from django.core.exceptions import ImproperlyConfigured
 
-from .base import *  # noqa: F403
+from config.production_validation import validate_production_environment
+
+validate_production_environment(os.environ)
+
+from .base import *  # noqa: E402, F403
 
 DEBUG = False
+DEPLOYMENT_ENVIRONMENT = "production"
 os.environ.setdefault("APP_ENV", "production")
 if not SECRET_KEY:  # noqa: F405
     raise ImproperlyConfigured("SECRET_KEY must be set in production.")
@@ -34,4 +39,11 @@ SECURE_SSL_REDIRECT = True
 SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", "0"))  # noqa: F405
 SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_HSTS_SECONDS > 0
 SECURE_HSTS_PRELOAD = False
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# Preload enrollment is intentionally deferred until the domain/TLS rollout
+# is verified. Keep all other Django deployment warnings visible.
+SILENCED_SYSTEM_CHECKS = ["security.W021"]
+SECURE_PROXY_SSL_HEADER = (
+    ("HTTP_X_FORWARDED_PROTO", "https")
+    if os.environ.get("TRUST_X_FORWARDED_PROTO", "False").lower() == "true"
+    else None
+)

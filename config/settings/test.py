@@ -7,6 +7,7 @@ SECRET_KEY = SECRET_KEY or "test-only-key-not-used-outside-test-settings"  # noq
 ALLOWED_HOSTS = ["testserver", "localhost"]
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+DEPLOYMENT_ENVIRONMENT = "test"
 
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},

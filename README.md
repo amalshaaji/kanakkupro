@@ -77,6 +77,8 @@ pytest
 
 Tests use the PostgreSQL URL in `DATABASE_URL`. GitHub Actions starts PostgreSQL and runs these checks alongside the asset build.
 
+CI also runs production deployment checks and Python/npm vulnerability audits. The production check uses synthetic configuration; live provider delivery, HTTPS, monitoring, and recovery still require deployment verification.
+
 ### Catalog pricing and GST classification
 
 Catalog forms require a nonnegative unit price (up to four decimal places), a numeric HSN/SAC code, and a selected tax treatment. Taxable items require a positive rate; exempt items store a zero rate. Rates and codes must be selected by the business; the application checks their format and consistency, not their legal applicability. Prices use the workspace currency, which defaults to INR for new workspaces.
@@ -88,6 +90,10 @@ Apply all migrations with `python manage.py migrate` before using this update. T
 Open `/invoices/` and complete **Invoice settings** as an Owner/Admin. Complete the customer's Indian billing address/country and catalog tax details, then create and issue a draft. Issued details are immutable; linked credit/debit notes preserve corrections. Partial/final payments and append-only reversals reconcile with dashboard balances. PDF downloads use stored snapshots and totals. See [Financial workflow](docs/financial-workflow.md) for the supported India V1 scope, calculation order, roles, numbering, migrations, deployment steps, and limitations.
 
 ## Settings and deployment
+
+Use `.env.production.example` as a configuration reference in the deployment's secret manager. Production requires an explicit TLS PostgreSQL URL, a strong generated `SECRET_KEY`, real email configuration, and separate `MFA_ENCRYPTION_KEYS`. Forwarded HTTPS headers are trusted only when `TRUST_X_FORWARDED_PROTO=True` is explicitly enabled after reviewing the proxy.
+
+Platform staff must verify their email, enroll TOTP under `/accounts/2fa/`, retain recovery codes securely, and complete MFA before using `/admin/`. Admin access requires MFA within the last 15 minutes, including sessions created outside allauth. MFA secrets are encrypted at rest; back up the encryption keys separately from PostgreSQL. Apply migrations and create the shared cache table before enabling logins. See [Production security](docs/production-security.md) for rollout, key rotation, verification, and remaining release gates.
 
 - `config.settings.dev` is used by `manage.py` for local work.
 - `config.settings.test` uses PostgreSQL and an in-memory email backend.

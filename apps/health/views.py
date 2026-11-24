@@ -1,5 +1,6 @@
 import logging
 
+from django.core.cache import cache
 from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.cache import never_cache
@@ -19,6 +20,7 @@ def live(request):
 @require_GET
 @never_cache
 def ready(request):
+    dependency = "postgresql"
     try:
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
@@ -26,12 +28,16 @@ def ready(request):
                 raise RuntimeError(
                     "Database readiness probe returned an invalid result."
                 )
+        dependency = "authentication_cache"
+        # Read-only probe: production allauth throttling and TOTP replay
+        # protection require the shared cache table, not just a live database.
+        cache.get("kanakkupro.health.readiness")
     except Exception:
         logger.warning(
             "readiness_check_failed",
             extra={
                 "request_id": getattr(request, "request_id", "-"),
-                "dependency": "postgresql",
+                "dependency": dependency,
             },
         )
         return JsonResponse(
