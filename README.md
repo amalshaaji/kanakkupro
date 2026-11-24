@@ -91,7 +91,7 @@ Open `/invoices/` and complete **Invoice settings** as an Owner/Admin. Complete 
 
 ## Settings and deployment
 
-For Render staging, use the repository-root `render.yaml` Blueprint and follow [Render staging](docs/render-staging.md). The Docker image includes Gunicorn, compiled assets, and native PDF dependencies. Releases serialize migrations against a direct Neon endpoint and verify the shared authentication cache. Runtime-only dependencies are pinned in `requirements.runtime.lock`; regenerate it from `requirements.txt` constrained by `requirements.lock` when updating dependencies.
+For Render staging, use the repository-root `render.yaml` Blueprint and follow [Render staging](docs/render-staging.md). The native Python build installs pinned dependencies, compiles assets, collects static files, and verifies PDF rendering. Use `bash scripts/render_build.sh` as the build command and `python scripts/render_start.py` as the start command. Releases serialize migrations against a direct Neon endpoint and verify the shared authentication cache. Runtime-only dependencies are pinned in `requirements.runtime.lock`; regenerate it from `requirements.txt` constrained by `requirements.lock` when updating dependencies.
 
 Use `.env.production.example` as a configuration reference in the deployment's secret manager. Production requires an explicit TLS PostgreSQL URL, a strong generated `SECRET_KEY`, real email configuration, and separate `MFA_ENCRYPTION_KEYS`. Forwarded HTTPS headers are trusted only when `TRUST_X_FORWARDED_PROTO=True` is explicitly enabled after reviewing the proxy.
 

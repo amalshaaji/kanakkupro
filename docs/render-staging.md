@@ -1,6 +1,6 @@
 # Render staging deployment
 
-The repository includes a Render Blueprint (`render.yaml`), a non-root Docker image, Gunicorn configuration, a serialized release entrypoint, and read-only restore-verification tooling. Neon remains the database; the Blueprint does not create or substitute a Render database.
+The repository includes a Render Blueprint (`render.yaml`), a native Python build script, Gunicorn configuration, a serialized release entrypoint, and read-only restore-verification tooling. Neon remains the database; the Blueprint does not create or substitute a Render database.
 
 ## Simple setup
 
@@ -9,6 +9,17 @@ The repository includes a Render Blueprint (`render.yaml`), a non-root Docker im
 3. Deploy. Render assigns the HTTPS address; startup runs the database migrations automatically.
 
 One direct database URL is enough. The separate migration URL is optional and only needed if you later use a pooled application connection. Keep credentials in Render's environment-variable form.
+
+## Existing Python service
+
+Keep the existing service. In **Settings → Build & Deploy**, set:
+
+- Runtime: **Python 3**
+- Build command: `bash scripts/render_build.sh`
+- Start command: `python scripts/render_start.py`
+- Health check path: `/health/ready/`
+
+Set `PYTHON_VERSION=3.12.12`, `NODE_VERSION=22`, `DJANGO_SETTINGS_MODULE=config.settings.render`, `APP_ENV=staging`, `TRUST_X_FORWARDED_PROTO=True`, and `SECURE_HSTS_SECONDS=3600` in Environment, alongside the secrets below. Deploy the latest `main` commit. The start script runs migrations and then starts `config.wsgi:application`; do not use the placeholder `your_application.wsgi`.
 
 ## Setup details
 
@@ -27,7 +38,7 @@ Render free services spin down when idle and restrict SMTP ports 25/465/587. The
 
 ## Release behavior
 
-The image builds CSS/HTMX in a Node stage, installs only the pinned runtime dependencies and native PDF libraries, collects static files without deployment secrets, and runs as a non-root user. Runtime configuration uses the production security validator.
+The native build uses Render’s Node/npm tools to build CSS/HTMX, installs only the pinned runtime dependencies, and collects static files without deployment secrets. A real PDF-rendering smoke check verifies the native Pango/Harfbuzz libraries before release. Missing native libraries fail the build rather than leaving broken invoice exports. Runtime configuration uses the production security validator.
 
 Before Gunicorn starts, `scripts/render_start.py` opens a dedicated TLS connection to the direct migration endpoint, acquires a PostgreSQL session advisory lock, and runs deployment checks, forward migrations, cache-table creation, and migration-state verification. It releases the lock even on failure. Failed checks stop startup. Application requests continue to use the original application database URL. The source and migration URLs must refer to the same Neon database; confirm this in the dashboard before deployment.
 
@@ -40,7 +51,7 @@ The service binds to Render's `PORT`, uses one synchronous worker by default to 
 - Both `/health/live/` and `/health/ready/` must return 200 over HTTPS. Readiness includes the shared authentication cache table.
 - Confirm static CSS/HTMX load, HTTP redirects to HTTPS, allowed-host handling, secure cookies, and private/no-store authenticated responses.
 - Verify actual signup/confirmation and password-reset email delivery to an operator-controlled inbox. A configured backend is not evidence of delivery.
-- Create the platform administrator through an authorized operator session using the staging environment and direct Neon connection. Verify email and enroll MFA before using `/admin/`. Do not seed a default administrator or password into the image.
+- Create the platform administrator through an authorized operator session using the staging environment and direct Neon connection. Verify email and enroll MFA before using `/admin/`. Do not seed a default administrator or password into the repository.
 - Run the customer → catalog → draft → issue → PDF → partial/final payment → reversal/correction journey. Test a separate tenant and denied cross-tenant identifiers.
 - Route uptime/error alerts to a named operator before pilot. Render log availability alone is not configured external alerting.
 
@@ -62,6 +73,6 @@ The restored target remains for authorized inspection and manual cleanup. This i
 
 ## Validation status
 
-The local environment can run the Django/Gunicorn configuration checks, full PostgreSQL suite, Render schema validation, and a real disposable pg_dump/pg_restore drill. Docker is not installed locally; the added CI container job builds the image and verifies native PDF rendering, WSGI startup, and collected assets. A real Render deployment and provider delivery/monitoring checks require the account and staging secret configuration above.
+The local environment can run the Django/Gunicorn configuration checks, full PostgreSQL suite, Render schema validation, and a real disposable pg_dump/pg_restore drill. The CI native-build job verifies PDF rendering, WSGI startup, and collected assets without a Docker application image. Render’s own managed environment still needs a successful deployment build. A real Render deployment and provider delivery/monitoring checks require the account and staging secret configuration above.
 
-References: [Render Blueprints](https://render.com/docs/blueprint-spec), [Render Docker](https://render.com/docs/docker), [Render free-service limits](https://render.com/docs/free), [Render HTTPS](https://render.com/docs/tls).
+References: [Render Blueprints](https://render.com/docs/blueprint-spec), [Render native runtimes](https://render.com/docs/native-runtimes), [Render free-service limits](https://render.com/docs/free), [Render HTTPS](https://render.com/docs/tls).

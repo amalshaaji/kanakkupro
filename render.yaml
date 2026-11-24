@@ -1,11 +1,17 @@
 services:
   - type: web
     name: kanakkupro-staging
-    runtime: docker
+    runtime: python
+    buildCommand: bash scripts/render_build.sh
+    startCommand: python scripts/render_start.py
     plan: free
     autoDeployTrigger: "off"
     healthCheckPath: /health/ready/
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.12"
+      - key: NODE_VERSION
+        value: "22"
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.render
       - key: APP_ENV

@@ -65,21 +65,25 @@ jobs:
       - run: npm audit --audit-level=low
       - run: npm run build
 
-  container:
+  native-build:
     needs: checks
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t kanakkupro-staging .
-      - name: Verify PDF native dependencies
-        run: >-
-          docker run --rm --entrypoint python kanakkupro-staging
-          -c "from weasyprint import HTML; assert HTML(string='<p>Invoice runtime check</p>').write_pdf().startswith(b'%PDF')"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: sudo apt-get update && sudo apt-get install -y libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0
+      - run: bash scripts/render_build.sh
       - name: Verify WSGI startup and collected assets
         run: |
-          docker run -d --name staging-smoke -p 10000:10000 -e DJANGO_SETTINGS_MODULE=config.settings.build --entrypoint gunicorn kanakkupro-staging config.wsgi:application --config gunicorn.conf.py
-          trap 'docker rm -f staging-smoke' EXIT
+          DJANGO_SETTINGS_MODULE=config.settings.build python -m gunicorn config.wsgi:application --config gunicorn.conf.py &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
           for attempt in $(seq 1 30); do
             if curl --fail --silent http://localhost:10000/health/live/; then break; fi
             sleep 1
