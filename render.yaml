@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: kanakkupro-staging
+    runtime: docker
+    plan: free
+    autoDeployTrigger: "off"
+    healthCheckPath: /health/ready/
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.render
+      - key: APP_ENV
+        value: staging
+      - key: TRUST_X_FORWARDED_PROTO
+        value: "True"
+      - key: SECURE_HSTS_SECONDS
+        value: "3600"
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: SECRET_KEY
+        sync: false
+      - key: MFA_ENCRYPTION_KEYS
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.smtp.EmailBackend
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        value: "2525"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false

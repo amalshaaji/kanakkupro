@@ -68,7 +68,8 @@ class ProductionValidationTests(SimpleTestCase):
             "import django;django.setup();from django.conf import settings;"
             "import json;print(json.dumps({'proxy':settings.SECURE_PROXY_SSL_HEADER,"
             "'sslmode':settings.DATABASES['default']['OPTIONS']['sslmode'],"
-            "'pooled':settings.DATABASES['default'].get('DISABLE_SERVER_SIDE_CURSORS',False)}))"
+            "'pooled':settings.DATABASES['default'].get('DISABLE_SERVER_SIDE_CURSORS',False),"
+            "'hosts':settings.ALLOWED_HOSTS,'csrf':settings.CSRF_TRUSTED_ORIGINS}))"
         )
         result = subprocess.run(
             [sys.executable, "-c", code],
@@ -102,6 +103,16 @@ class ProductionValidationTests(SimpleTestCase):
             DATABASE_URL="postgresql://user:password@database-pooler.example.test/app?sslmode=require"
         )
         self.assertTrue(values["pooled"])
+
+    def test_render_uses_assigned_hostname_with_production_security(self):
+        self.env.pop("ALLOWED_HOSTS")
+        self.env.pop("CSRF_TRUSTED_ORIGINS")
+        values = self.inspect_settings(
+            DJANGO_SETTINGS_MODULE="config.settings.render",
+            RENDER_EXTERNAL_HOSTNAME="kanakkupro-staging.onrender.com",
+        )
+        self.assertEqual(values["hosts"], ["kanakkupro-staging.onrender.com"])
+        self.assertEqual(values["csrf"], ["https://kanakkupro-staging.onrender.com"])
 
     def test_django_deployment_checks_pass_with_verified_https_configuration(self):
         result = subprocess.run(

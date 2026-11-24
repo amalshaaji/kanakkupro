@@ -64,3 +64,25 @@ jobs:
       - run: npm ci
       - run: npm audit --audit-level=low
       - run: npm run build
+
+  container:
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t kanakkupro-staging .
+      - name: Verify PDF native dependencies
+        run: >-
+          docker run --rm --entrypoint python kanakkupro-staging
+          -c "from weasyprint import HTML; assert HTML(string='<p>Invoice runtime check</p>').write_pdf().startswith(b'%PDF')"
+      - name: Verify WSGI startup and collected assets
+        run: |
+          docker run -d --name staging-smoke -p 10000:10000 -e DJANGO_SETTINGS_MODULE=config.settings.build --entrypoint gunicorn kanakkupro-staging config.wsgi:application --config gunicorn.conf.py
+          trap 'docker rm -f staging-smoke' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://localhost:10000/health/live/; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://localhost:10000/health/live/
+          curl --fail --silent http://localhost:10000/static/css/app.css > /dev/null

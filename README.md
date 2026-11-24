@@ -91,6 +91,8 @@ Open `/invoices/` and complete **Invoice settings** as an Owner/Admin. Complete 
 
 ## Settings and deployment
 
+For Render staging, use the repository-root `render.yaml` Blueprint and follow [Render staging](docs/render-staging.md). The Docker image includes Gunicorn, compiled assets, and native PDF dependencies. Releases serialize migrations against a direct Neon endpoint and verify the shared authentication cache. Runtime-only dependencies are pinned in `requirements.runtime.lock`; regenerate it from `requirements.txt` constrained by `requirements.lock` when updating dependencies.
+
 Use `.env.production.example` as a configuration reference in the deployment's secret manager. Production requires an explicit TLS PostgreSQL URL, a strong generated `SECRET_KEY`, real email configuration, and separate `MFA_ENCRYPTION_KEYS`. Forwarded HTTPS headers are trusted only when `TRUST_X_FORWARDED_PROTO=True` is explicitly enabled after reviewing the proxy.
 
 Platform staff must verify their email, enroll TOTP under `/accounts/2fa/`, retain recovery codes securely, and complete MFA before using `/admin/`. Admin access requires MFA within the last 15 minutes, including sessions created outside allauth. MFA secrets are encrypted at rest; back up the encryption keys separately from PostgreSQL. Apply migrations and create the shared cache table before enabling logins. See [Production security](docs/production-security.md) for rollout, key rotation, verification, and remaining release gates.

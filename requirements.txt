@@ -6,3 +6,4 @@ psycopg[binary]>=3.2,<4
 whitenoise>=6.8,<7
 weasyprint>=70,<71
 cryptography>=50,<51
+gunicorn>=23,<24
