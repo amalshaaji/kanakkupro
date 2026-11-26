@@ -25,3 +25,5 @@ h1,h2,h3{letter-spacing:-.035em}a,button,input,select{touch-action:manipulation}
 @media(max-width:640px){.team-summary{grid-template-columns:1fr 1fr;gap:1.3rem;padding:1.3rem}.team-summary>div:first-child{grid-column:1/-1}.team-count strong{font-size:1.6rem}.invite-title{align-items:flex-start}.invite-title .card-title{line-height:1.5}}
 
 .brand-mark{display:block;width:38px;height:38px;flex-shrink:0}.preview-brand img{display:block;width:26px;height:26px;flex-shrink:0}
+
+.brand-wordmark{display:block;width:174px;height:auto;max-height:74px;object-fit:contain;flex-shrink:0}@media(max-width:480px){.brand-wordmark{width:145px}}
