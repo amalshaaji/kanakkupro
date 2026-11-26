@@ -8,6 +8,8 @@ from apps.tenants.permissions import membership_has_permission
 
 
 def home(request):
+    if request.user.is_authenticated:
+        return redirect("dashboard:index")
     return render(request, "pages/home.html")
 
 

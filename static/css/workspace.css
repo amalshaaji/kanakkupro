@@ -36,3 +36,5 @@ h1,h2,h3{letter-spacing:-.035em}a,button,input,select{touch-action:manipulation}
 
 /* Workspace identity belongs at the top-left, before navigation. */
 .workspace-navigation>.sidebar-identity{margin:0 0 1rem;padding:.35rem .8rem 1rem;border-top:0;border-bottom:1px solid #e6ebef;text-align:left;justify-content:flex-start}.workspace-navigation>.sidebar-identity .sidebar-email{font-weight:600}.workspace-navigation>.sidebar-identity .sidebar-identity-label{font-size:.65rem}.workspace-sidebar .workspace-navigation>.sidebar-identity{margin-top:0}
+
+.workspace-shell{min-height:calc(100dvh - 76px);margin:0;max-width:none}.workspace-navbar{max-width:none}@media(min-width:1024px){.workspace-navbar{padding-left:1rem;padding-right:2rem}}

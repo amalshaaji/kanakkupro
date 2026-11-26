@@ -17,7 +17,7 @@
     {% include "partials/site_header.html" %}
 
     {% if request.user.is_authenticated and request.tenant %}
-      <div class="mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-[100rem] lg:grid-cols-[16rem_minmax(0,1fr)]">
+      <div class="workspace-shell grid w-full lg:grid-cols-[16rem_minmax(0,1fr)]">
         <aside class="workspace-sidebar hidden border-r border-base-300 bg-base-100 p-4 lg:block" aria-label="Workspace navigation">
           {% include "partials/app_navigation.html" %}
         </aside>

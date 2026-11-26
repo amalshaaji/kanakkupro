@@ -11,6 +11,14 @@ class DashboardAccessTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
+    def test_signed_in_home_redirects_to_dashboard(self):
+        user = get_user_model().objects.create_user("home-owner@example.test")
+        self.client.force_login(user)
+        response = self.client.get(reverse("home"))
+        self.assertRedirects(
+            response, reverse("dashboard:index"), fetch_redirect_response=False
+        )
+
     def test_dashboard_redirects_anonymous_user_to_login(self):
         response = self.client.get(reverse("dashboard:index"))
 
