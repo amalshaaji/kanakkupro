@@ -85,6 +85,8 @@ Do not put production connection strings, credentials, or customer exports in th
 
 The `Availability check` GitHub Actions workflow checks the public readiness endpoint every 30 minutes and supports manual execution. Configure GitHub workflow-failure notifications and verify delivery to the operator. Scheduling can be delayed; this is a baseline availability check, not a real-time error-monitoring service or an availability SLO measurement. Do not deliberately fail the production service to test it; use a controlled test URL or test workflow.
 
+For a read-only SMTP diagnosis, run `python manage.py check_email_transport` in a trusted deployment environment. It checks TLS/authentication without sending mail or printing credentials. Inbox delivery still requires a separate authorized test.
+
 SMTP transport/authentication failures return a private 503 recovery page with a request ID. Logs record only a safe failure category, never SMTP response text or credentials. Email attempts have a 15-second timeout. Account verification is not bypassed. Invitations already committed before delivery failure remain pending; revoke and recreate an undelivered invitation after the provider is fixed. No durable automatic retry queue is claimed.
 
 ## Operational gaps

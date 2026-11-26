@@ -29,6 +29,23 @@ Owners and Admins can open **Settings → Pilot guide** (`/dashboard/pilot/`) or
 
 This feature does not enroll businesses, contact customers, approve a pilot cohort, bypass verification, or certify that Phase 6 has passed. Recruiting and admitting 3–5 consenting businesses remains an operator task after the release gates pass.
 
+## Operator verification commands
+
+Run these only on a trusted operator host with the deployment environment loaded privately. Do not pass connection strings or passwords as command arguments or paste their values into chat.
+
+```bash
+python manage.py check_email_transport
+python manage.py pilot_status --tenant TENANT_UUID --reviewer OWNER_OR_ADMIN_USER_UUID
+```
+
+`check_email_transport` opens a TLS-protected SMTP connection, authenticates, and closes it without sending any message. Its JSON output distinguishes authentication rejection from connection/TLS failure without provider response text. Successful authentication does not prove sender authorization or delivery to an inbox.
+
+`pilot_status` reads only the explicitly selected business and requires an active Owner/Admin reviewer. It emits progress counts and outstanding operator evidence, without email addresses or feedback text. It never approves admission or changes check marks.
+
+The HTTP acceptance tests in `apps/dashboard/test_pilot_acceptance.py` execute the owner signup/verification → business/customer/catalog setup → invoice issuance → partial/final payments → reports → viewer invitation journey using CSRF-enforced clients and in-memory mail. They test role and cross-tenant denials; Linux CI also downloads and checks the issued PDF. These tests are isolated from the deployed database and do not certify live provider delivery or replace a browser accessibility review.
+
+The availability workflow now runs when its checker/configuration changes on `main`, in addition to its schedule/manual trigger. Verify failure notifications separately; a successful job alone does not prove an alert reaches the incident owner.
+
 ## Pilot plan after gates pass
 
 1. Select one initial business segment and an operator/support contact. Recruit 3–5 businesses with their consent; no customer outreach is automated here.

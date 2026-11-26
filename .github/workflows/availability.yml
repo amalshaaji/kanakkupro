@@ -1,5 +1,10 @@
 name: Availability check
 on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/check_service.py
+      - .github/workflows/availability.yml
   workflow_dispatch:
   schedule:
     - cron: '*/30 * * * *'
