@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Team | KankkuPro{% endblock %}
+{% block title %}Team | KanakkuPro{% endblock %}
 
 {% block breadcrumbs %}{% include "partials/breadcrumbs.html" with current_page="Team access" %}{% endblock %}
 
@@ -9,9 +9,10 @@
   {% include "partials/page_heading.html" with eyebrow=request.tenant.name heading="Team access" description="Manage who can access this business workspace." %}
 </div>
 
-<section class="card border border-base-300 bg-base-100" aria-labelledby="invite-heading">
+<div class="team-summary" aria-label="Team summary"><div><span class="eyebrow">PEOPLE & PERMISSIONS</span><p>A shared workspace.<br><strong>The right access for everyone.</strong></p></div><div class="team-count"><strong>{{ members|length }}</strong><span>Member{{ members|length|pluralize }}</span></div><div class="team-count"><strong>{{ invitations|length }}</strong><span>Pending invitation{{ invitations|length|pluralize }}</span></div></div>
+<section class="team-invite card border border-base-300 bg-base-100" aria-labelledby="invite-heading">
   <div class="card-body">
-    <h2 class="card-title" id="invite-heading">Invite a teammate</h2>
+    <div class="invite-title"><span class="invite-symbol" aria-hidden="true">+</span><div><h2 class="card-title" id="invite-heading">Better work starts with your team.</h2><p>Invite a teammate by email and choose their access level.</p></div></div>
     <form method="post" class="grid gap-4 md:grid-cols-[1fr_16rem_auto] md:items-end">
       {% csrf_token %}
       {% if form.non_field_errors %}<div class="alert alert-error md:col-span-3" role="alert">{{ form.non_field_errors }}</div>{% endif %}
@@ -31,7 +32,7 @@
       <thead><tr><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Status</th></tr></thead>
       <tbody>
         {% for membership in members %}
-          <tr><td>{{ membership.user.email }}</td><td>{{ membership.get_role_display }}</td><td>{{ membership.get_status_display }}</td></tr>
+          <tr><td><div class="member-identity"><span class="member-avatar" aria-hidden="true">{{ membership.user.email|slice:":1"|upper }}</span><span>{{ membership.user.email }}</span></div></td><td><span class="role-label">{{ membership.get_role_display }}</span></td><td><span class="badge badge-outline {% if membership.status == 'active' %}badge-success{% endif %}">{{ membership.get_status_display }}</span></td></tr>
         {% empty %}
           <tr><td colspan="3" class="py-8 text-center text-base-content/60">No members found.</td></tr>
         {% endfor %}

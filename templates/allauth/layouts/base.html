@@ -4,15 +4,18 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block head_title %}Account{% endblock %} | KankkuPro</title>
+    <title>{% block head_title %}Account{% endblock %} | KanakkuPro</title>
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <link rel="stylesheet" href="{% static 'css/workspace.css' %}">
     <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
     {% block extra_head %}{% endblock %}
   </head>
   <body class="min-h-screen bg-base-200 text-base-content" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     <a class="skip-link" href="#main-content">Skip to main content</a>
     {% include "partials/site_header.html" %}
-    <main id="main-content" class="mx-auto w-full max-w-xl px-5 py-12 md:px-10">
+    <main id="main-content" class="account-layout">
+      <aside class="account-intro"><span class="eyebrow">THE SPACE TO GROW</span><h1>Less busywork.<br>More business.</h1><p>Keep customers, invoices, and payments together. One workspace for your next chapter.</p><div class="account-note">Customers · Invoicing · Payments</div></aside>
+      <div class="account-panel"><p class="eyebrow">YOUR KANAKKUPRO ACCOUNT</p>
       <section class="card border border-base-300 bg-base-100 shadow-sm">
         <div class="card-body p-7 sm:p-9">
           {% if messages %}
@@ -25,6 +28,7 @@
           {% block content %}{% endblock %}
         </div>
       </section>
+      <p class="account-caption">Your business. Your workspace.</p></div>
     </main>
     <script>
       document.body.addEventListener("htmx:configRequest", (event) => {

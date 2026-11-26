@@ -1,41 +1,24 @@
 {% extends "base.html" %}
-
-{% block title %}KankkuPro | A clearer way to run your business{% endblock %}
-
+{% block title %}KanakkuPro | Your business, beautifully organized{% endblock %}
 {% block content %}
-<section class="grid items-center gap-12 py-10 md:grid-cols-[1.1fr_0.9fr] md:py-20">
-  <div>
-    <p class="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-primary">Business operations, made clearer</p>
-    <h1 class="max-w-2xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">Keep your business moving from one calm workspace.</h1>
-    <p class="mt-6 max-w-xl text-lg leading-8 text-base-content/70">KankkuPro brings the everyday work of growing businesses into a secure, organized place. Start with the essentials and grow at your pace.</p>
-    <div class="mt-8 flex flex-wrap gap-3">
-      {% if request.user.is_authenticated %}
-        <a class="btn btn-primary" href="{% url 'dashboard:index' %}">Open your dashboard</a>
-      {% else %}
-        <a class="btn btn-primary" href="{% url 'account_signup' %}">Get started</a>
-        <a class="btn btn-outline" href="{% url 'account_login' %}">Sign in</a>
-      {% endif %}
-    </div>
-    <p class="mt-4 text-sm text-base-content/60">A dependable foundation for your business, built to grow with you.</p>
+<section class="landing-hero">
+  <div class="hero-copy">
+    <span class="hero-pill"><span aria-hidden="true"></span> A little clarity. A lot of possibility.</span>
+    <h1>Your business.<br>All together.<br><em>Under control.</em></h1>
+    <p>From your first customer to your next invoice, bring the everyday work of business into one beautifully simple workspace.</p>
+    <div class="hero-actions">{% if request.user.is_authenticated %}<a class="btn btn-primary" href="{% url 'dashboard:index' %}">Open your workspace <span aria-hidden="true">↗</span></a>{% else %}<a class="btn btn-primary" href="{% url 'account_signup' %}">Create your workspace <span aria-hidden="true">↗</span></a><a class="hero-secondary" href="{% url 'account_login' %}">Already here? Sign in →</a>{% endif %}</div>
+    <div class="hero-footnote">One place for customers, invoices, and payments.</div>
   </div>
-  <div class="card border border-base-300 bg-base-100 shadow-xl">
-    <div class="card-body gap-5 p-7 sm:p-9">
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-sm text-base-content/60">Workspace overview</p>
-          <h2 class="mt-1 text-2xl font-bold">Your business, at a glance</h2>
-        </div>
-        <span class="badge badge-success badge-outline">Ready to grow</span>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div class="rounded-2xl bg-base-200 p-4"><p class="text-sm text-base-content/60">Customers</p><p class="mt-2 text-2xl font-semibold">Organized</p></div>
-        <div class="rounded-2xl bg-base-200 p-4"><p class="text-sm text-base-content/60">Your team</p><p class="mt-2 text-2xl font-semibold">In sync</p></div>
-      </div>
-      <div class="rounded-2xl bg-primary/10 p-5">
-        <p class="font-semibold">Built around your business</p>
-        <p class="mt-1 text-sm leading-6 text-base-content/70">A private workspace keeps your team's information together and access under your control.</p>
-      </div>
+  <div class="product-preview" aria-label="Illustrative workspace preview">
+    <div class="preview-top"><span class="preview-brand">K <span>Workspace overview</span></span><span class="preview-tag">ILLUSTRATION</span></div>
+    <div class="preview-body"><div class="preview-greeting"><div><span class="eyebrow">THE BIG PICTURE</span><h2>A clearer kind of workday.</h2></div><span class="preview-sun" aria-hidden="true">☀</span></div>
+      <div class="preview-metrics"><div><span>Customers</span><strong>Connected.</strong><small>Every relationship, in one place.</small></div><div><span>Invoices</span><strong>Organized.</strong><small>From draft to payment.</small></div></div>
+      <div class="preview-invoice"><div class="preview-document" aria-hidden="true">↗</div><div><strong>From work done to payment received.</strong><p>A simple flow for every invoice.</p></div></div>
+      <div class="preview-flow"><span>Draft</span><b aria-hidden="true">→</b><span>Issued</span><b aria-hidden="true">→</b><span class="flow-paid">Paid ✓</span></div>
+      <div class="preview-bottom"><span class="status-dot" aria-hidden="true"></span> Built around your business <span aria-hidden="true">↗</span></div>
     </div>
   </div>
 </section>
+<section class="feature-strip" aria-label="What you can do"><article><span class="feature-number">01 / CUSTOMERS</span><h2>Know your people.</h2><p>Keep contact and billing details close at hand.</p></article><article><span class="feature-number">02 / INVOICING</span><h2>Make it official.</h2><p>Create, issue, and download invoices in one flow.</p></article><article><span class="feature-number">03 / PAYMENTS</span><h2>See where you stand.</h2><p>Track receipts and outstanding balances clearly.</p></article></section>
+<footer class="landing-footer"><strong>KanakkuPro</strong><span>A calmer way to run your business.</span></footer>
 {% endblock %}

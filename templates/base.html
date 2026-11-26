@@ -5,8 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="htmx-config" content='{"allowScriptTags":false}'>
-    <title>{% block title %}KankkuPro{% endblock %}</title>
+    <title>{% block title %}KanakkuPro{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <link rel="stylesheet" href="{% static 'css/workspace.css' %}">
     <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
     {% block extra_head %}{% endblock %}
   </head>
@@ -16,7 +17,7 @@
 
     {% if request.user.is_authenticated and request.tenant %}
       <div class="mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-[100rem] lg:grid-cols-[16rem_minmax(0,1fr)]">
-        <aside class="hidden border-r border-base-300 bg-base-100 p-4 lg:block" aria-label="Workspace navigation">
+        <aside class="workspace-sidebar hidden border-r border-base-300 bg-base-100 p-4 lg:block" aria-label="Workspace navigation">
           {% include "partials/app_navigation.html" %}
         </aside>
         <div class="min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-10">

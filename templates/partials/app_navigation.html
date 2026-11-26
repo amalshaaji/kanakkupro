@@ -1,5 +1,5 @@
-<nav aria-label="Workspace" class="flex flex-col gap-1">
-  <p class="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-base-content/60">Workspace</p>
+<nav aria-label="Workspace" class="workspace-navigation flex flex-col gap-1">
+  <div class="workspace-label">YOUR WORKSPACE</div>
   <a class="btn btn-ghost justify-start {% if request.resolver_match.view_name == 'dashboard:index' %}menu-active{% endif %}" href="{% url 'dashboard:index' %}" {% if request.resolver_match.view_name == 'dashboard:index' %}aria-current="page"{% endif %}>
     <svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7"/><path d="M5 9v12h14V9"/><path d="M9 21v-7h6v7"/></svg> Overview
   </a>
@@ -9,6 +9,7 @@
   <a class="btn btn-ghost justify-start {% if request.resolver_match.app_name == 'catalog' %}menu-active{% endif %}" href="{% url 'catalog:list' %}" {% if request.resolver_match.app_name == 'catalog' %}aria-current="page"{% endif %}>
     <svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 7 3-3h4l3 3 3 1-2 4v8H6v-8L4 8l3-1Z"/><path d="M9 12h6"/><path d="M10 4v4"/><path d="M14 4v4"/></svg> Catalog
   </a>
+  <a class="btn btn-ghost justify-start {% if request.resolver_match.app_name == 'sales' or request.resolver_match.app_name == 'payments' %}menu-active{% endif %}" href="{% url 'sales:list' %}" {% if request.resolver_match.app_name == 'sales' or request.resolver_match.app_name == 'payments' %}aria-current="page"{% endif %}><svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4M9 12h6M9 16h6"/></svg> Invoices</a>
   <a class="btn btn-ghost justify-start {% if request.resolver_match.app_name == 'reports' %}menu-active{% endif %}" href="{% url 'reports:home' %}" {% if request.resolver_match.app_name == 'reports' %}aria-current="page"{% endif %}>
     <svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-5 5"/></svg> Reports
   </a>
@@ -18,7 +19,6 @@
     </a>
   {% endif %}
   <div class="mt-6 border-t border-base-300 pt-4">
-    <a class="btn btn-ghost mb-3 w-full justify-start {% if request.resolver_match.app_name == 'sales' or request.resolver_match.app_name == 'payments' %}menu-active{% endif %}" href="{% url 'sales:list' %}">Invoices</a>
     <p class="truncate px-3 text-xs text-base-content/60">Signed in as</p>
     <a class="btn btn-ghost btn-sm mt-2 w-full justify-start" href="{% url 'mfa_index' %}">Account security</a>
     <p class="mt-1 truncate px-3 text-sm font-medium" title="{{ request.user.email }}">{{ request.user.email }}</p>
