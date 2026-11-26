@@ -13,6 +13,8 @@ MODELS = (
     "tenants.Tenant",
     "tenants.TenantMembership",
     "tenants.Invitation",
+    "tenants.PilotCheck",
+    "tenants.PilotFeedback",
     "customers.Customer",
     "catalog.CatalogItem",
     "sales.SellerProfile",

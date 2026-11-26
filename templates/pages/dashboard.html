@@ -6,6 +6,7 @@
 
 {% block content %}
 {% include "partials/page_heading.html" with eyebrow=request.tenant.name heading="Welcome back" description="A clear view of your sales, customers, and what needs attention." %}
+{% if can_manage_team %}<div class="pilot-dashboard-banner"><div><strong>Set up your business, step by step.</strong><p>Review your checklist and keep pilot feedback together.</p></div><a class="btn btn-outline btn-sm" href="{% url 'dashboard:pilot' %}">Open pilot guide →</a></div>{% endif %}
 {% include "sales/financial_summary.html" %}
 <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Dashboard summary">
   <article class="card border border-base-300 bg-base-100 shadow-sm"><div class="card-body"><p class="text-sm text-base-content/60">Active customers</p><p class="text-2xl font-semibold">{{ customer_count }}</p><p class="text-sm text-base-content/60">Customer contact and billing records in this business.</p><a class="link link-primary mt-2" href="{% url 'customers:list' %}">View customers</a></div></article>

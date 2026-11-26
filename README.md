@@ -110,3 +110,7 @@ Phases 1–4 provide the foundation, email authentication, shared UI, and tenant
 Phase 6 includes append-only audit events, dated financial reports and bounded CSV exports, health probes, structured logs, secure production settings, and recoverable SMTP failure pages. A scheduled GitHub Actions readiness check provides baseline availability checks; alert delivery and provider recovery remain unverified. See [Phase 7 pilot preparation](docs/phase-7-pilot.md) for the gate register. Phase 7 is pilot, Phase 8 paid SaaS, and Phase 9 expansion; Phase 6 is not complete until its external gates pass.
 
 The active tenant is resolved from current membership on every request. Financial writes revalidate permissions, protect duplicate requests, and commit audit events atomically. See [ADR-001](docs/decisions/ADR-001-india-launch.md), [Financial workflow](docs/financial-workflow.md), and [Operations](docs/operations.md) for scope and deployment requirements.
+
+### Phase 7 pilot guide
+
+Owners/Admins can open **Settings → Pilot guide** for business setup progress, manual email/PDF/reconciliation checks, and a business-scoped feedback tracker. The guide records preparation; actual pilot admission remains subject to the [release gates](docs/phase-7-pilot.md). Feedback is saved in the business and does not automatically contact support.

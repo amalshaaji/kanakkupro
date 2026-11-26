@@ -131,3 +131,92 @@ class Invitation(models.Model):
 
     def __str__(self):
         return f"{self.email} → {self.tenant} ({self.get_role_display()})"
+
+
+class PilotCheck(models.Model):
+    class Code(models.TextChoices):
+        VERIFICATION = "verification", "Verification email received"
+        RESET = "reset", "Password reset email received"
+        INVITATION = "invitation", "Invitation email received"
+        PDF = "pdf", "Invoice PDF reviewed"
+        RECONCILIATION = (
+            "reconciliation",
+            "Invoice, payment and report totals reconciled",
+        )
+
+    tenant = models.ForeignKey(Tenant, on_delete=models.PROTECT)
+    code = models.CharField(max_length=20, choices=Code.choices)
+    confirmed = models.BooleanField(default=False)
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    reviewed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "code"], name="uq_pilot_check_tenant_code"
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    code__in=[
+                        "verification",
+                        "reset",
+                        "invitation",
+                        "pdf",
+                        "reconciliation",
+                    ]
+                ),
+                name="pilot_check_valid_code",
+            ),
+        ]
+
+
+class PilotFeedback(models.Model):
+    class Kind(models.TextChoices):
+        ISSUE = "issue", "Something isn't working"
+        IDEA = "idea", "Improvement idea"
+
+    class Severity(models.TextChoices):
+        LOW = "low", "Low"
+        MEDIUM = "medium", "Medium"
+        HIGH = "high", "High — blocks a workflow"
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Open"
+        INVESTIGATING = "investigating", "Investigating"
+        RESOLVED = "resolved", "Resolved"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.PROTECT)
+    submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    kind = models.CharField(max_length=8, choices=Kind.choices)
+    severity = models.CharField(max_length=8, choices=Severity.choices)
+    description = models.TextField(max_length=2000)
+    request_id = models.CharField(max_length=32, blank=True)
+    status = models.CharField(
+        max_length=15, choices=Status.choices, default=Status.OPEN
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+        indexes = [
+            models.Index(
+                fields=["tenant", "status", "created_at"],
+                name="pilot_feedback_tenant_status",
+            )
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(kind__in=["issue", "idea"]),
+                name="pilot_feedback_valid_kind",
+            ),
+            models.CheckConstraint(
+                condition=Q(severity__in=["low", "medium", "high"]),
+                name="pilot_feedback_valid_severity",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=["open", "investigating", "resolved"]),
+                name="pilot_feedback_valid_status",
+            ),
+        ]

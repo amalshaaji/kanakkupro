@@ -1,6 +1,6 @@
 # Phase 7 pilot preparation
 
-Status: preparation only; pilot admission is blocked by the unchecked Phase 6 gates below. A live Render service does not demonstrate production readiness.
+Status: pilot preparation tooling is implemented; pilot admission is blocked by the unchecked Phase 6 gates below. A live Render service does not demonstrate production readiness.
 
 The PRD numbering is authoritative: Phase 6 hardening, Phase 7 pilot, Phase 8 paid SaaS, Phase 9 expansion. Do not start subscription billing or claim the pilot is complete as a substitute for release verification.
 
@@ -16,6 +16,18 @@ The PRD numbering is authoritative: Phase 6 hardening, Phase 7 pilot, Phase 8 pa
 | Performance | Query-count regression tests cover invoice/dashboard and report growth; rows paginated | Run concurrent representative workloads and record latency/cold-start measurements; query counts alone are not a latency benchmark |
 | Security / access | Production configuration, admin MFA, tenant/permission tests implemented | Verify deployed admin enrollment/recovery and least-privilege database/operator access; confirm exposed keys were replaced |
 | Accessibility / support / privacy | Responsive shell and operator runbooks exist | Complete critical keyboard/contrast checks and approve support, incident, retention/deletion, privacy and terms procedures |
+
+## Pilot guide in the app
+
+Owners and Admins can open **Settings → Pilot guide** (`/dashboard/pilot/`) or follow the dashboard banner. Other roles and revoked memberships cannot read or change this business's pilot records.
+
+- Seven setup checks read the current business records: verified account, seller settings, customer, catalog item, issued invoice, unreversed payment, and a fully paid invoice.
+- Five manual checks record the reviewing user and time for verification/reset/invitation delivery, PDF review, and financial reconciliation. These are business attestations, not automatic email probes or operator admission approval.
+- Feedback records issue/idea, severity, optional support reference, and Open/Investigating/Resolved status. Feedback is visible to this business's Owners/Admins; no external support notification is sent automatically. Checklist and feedback changes write audit events without copying feedback text into audit metadata.
+- The timing measure is minutes from business creation to the first issued invoice. It includes setup time and must not be presented as the PRD's separate five-minute-after-setup KPI.
+- These two pilot tables are included in the restore manifest. The additive migration creates only these tables and constraints; it does not alter financial records.
+
+This feature does not enroll businesses, contact customers, approve a pilot cohort, bypass verification, or certify that Phase 6 has passed. Recruiting and admitting 3–5 consenting businesses remains an operator task after the release gates pass.
 
 ## Pilot plan after gates pass
 

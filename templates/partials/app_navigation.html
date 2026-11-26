@@ -24,6 +24,7 @@
   </a>
   <div class="workspace-label nav-section-label">SETTINGS</div>
   {% if request.can_manage_tenant_team %}
+    <a class="btn btn-ghost justify-start {% if request.resolver_match.view_name == 'dashboard:pilot' %}menu-active{% endif %}" href="{% url 'dashboard:pilot' %}" {% if request.resolver_match.view_name == 'dashboard:pilot' %}aria-current="page"{% endif %}><svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v4H9zM9 12h6M9 16h4"/></svg> Pilot guide</a>
     <a class="btn btn-ghost justify-start {% if request.resolver_match.view_name == 'tenants:team' %}menu-active{% endif %}" href="{% url 'tenants:team' %}" {% if request.resolver_match.view_name == 'tenants:team' %}aria-current="page"{% endif %}>
       <svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Team access
     </a>
