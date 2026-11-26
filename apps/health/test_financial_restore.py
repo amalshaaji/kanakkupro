@@ -108,3 +108,122 @@ print(json.dumps({'financial_reconciliation': 'verified'}))
                         sql.Identifier(target_name)
                     )
                 )
+
+
+@skipUnless(
+    os.environ.get("RUN_FINANCIAL_RESTORE") == "1"
+    and bool(os.environ.get("RESTORE_AGE_BIN")),
+    "Opt-in encrypted local restore drill",
+)
+class EncryptedFinancialRestoreTests(FinancialFixtures, TransactionTestCase):
+    def test_encrypted_dump_restores_ledger_with_offline_recovery_key(self):
+        import io
+        import tempfile
+        from pathlib import Path
+
+        from scripts.encrypted_backup import backup, command
+        from scripts.restore_drill import client_env, snapshot
+
+        from apps.health.management.commands.restore_manifest import manifest
+        from apps.health.test_encrypted_backup import storage_client
+
+        params = connection.get_connection_params()
+        self.assertIn(params.get("host"), {"localhost", "127.0.0.1", "::1"})
+        self.assertTrue(params["dbname"].startswith("test_"))
+        source = "postgresql://{}:{}@{}:{}/{}".format(
+            quote(str(params.get("user", "")), safe=""),
+            quote(str(params.get("password", "")), safe=""),
+            "[::1]" if params["host"] == "::1" else params["host"],
+            params.get("port") or 5432,
+            quote(params["dbname"], safe=""),
+        )
+        target_name = "test_restore_" + uuid.uuid4().hex
+        target = source.rsplit("/", 1)[0] + "/" + target_name
+        invoice = self.issue()
+        first = self.pay(invoice, "50.00")
+        self.pay(invoice, "68.00")
+        reverse_payment(
+            tenant=self.tenant,
+            actor=self.owner,
+            payment_id=first.pk,
+            reason="Synthetic encrypted restore",
+            date=self.today,
+            key=uuid.uuid4(),
+        )
+        self.issue(self.note(invoice))
+        expected = manifest()
+        client = storage_client()
+        age_bin = os.environ["RESTORE_AGE_BIN"]
+        keygen = (
+            str(Path(age_bin).with_name("age-keygen"))
+            if "/" in age_bin
+            else "age-keygen"
+        )
+        pg_bin = Path(os.environ.get("RESTORE_PG_BIN", ""))
+        with tempfile.TemporaryDirectory() as folder:
+            identity = Path(folder) / "identity.txt"
+            command([keygen, "-o", str(identity)], dict(os.environ))
+            public = run([keygen, "-y", str(identity)], dict(os.environ)).strip()
+            captured = []
+
+            def upload(**kwargs):
+                content = kwargs["Body"].read()
+                captured.append(content)
+                client.head_object.return_value = {"ContentLength": len(content)}
+                client.get_object.return_value = {"Body": io.BytesIO(content)}
+                return {"VersionId": "synthetic-version"}
+
+            client.put_object.side_effect = upload
+            result = backup(
+                {
+                    **os.environ,
+                    "BACKUP_DATABASE_URL": source,
+                    "BACKUP_AGE_RECIPIENT": public,
+                },
+                client,
+                pg_bin=str(pg_bin),
+                age_bin=age_bin,
+                allow_local=True,
+            )
+            self.assertEqual(result["status"], "uploaded_and_verified")
+            self.assertTrue(captured[0].startswith(b"age-encryption.org/v1"))
+            encrypted = Path(folder) / "backup.age"
+            plain = Path(folder) / "restore.dump"
+            encrypted.write_bytes(captured[0])
+            command(
+                [
+                    age_bin,
+                    "--decrypt",
+                    "--identity",
+                    str(identity),
+                    "--output",
+                    str(plain),
+                    str(encrypted),
+                ],
+                dict(os.environ),
+            )
+            with psycopg.connect(source, autocommit=True) as admin:
+                admin.execute(
+                    sql.SQL("CREATE DATABASE {}").format(sql.Identifier(target_name))
+                )
+                try:
+                    command(
+                        [
+                            str(pg_bin / "pg_restore"),
+                            "--exit-on-error",
+                            "--single-transaction",
+                            "--no-owner",
+                            "--no-privileges",
+                            "--dbname",
+                            target_name,
+                            str(plain),
+                        ],
+                        client_env(target, dict(os.environ)),
+                    )
+                    self.assertEqual(snapshot(target, dict(os.environ)), expected)
+                finally:
+                    admin.execute(
+                        sql.SQL("DROP DATABASE {} WITH (FORCE)").format(
+                            sql.Identifier(target_name)
+                        )
+                    )

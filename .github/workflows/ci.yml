@@ -49,8 +49,9 @@ jobs:
         env:
           RUN_FINANCIAL_RESTORE: "1"
           RESTORE_PG_BIN: /usr/lib/postgresql/16/bin
+          RESTORE_AGE_BIN: /usr/bin/age
         run: |
-          sudo apt-get update && sudo apt-get install -y postgresql-client-16
+          sudo apt-get update && sudo apt-get install -y postgresql-client-16 age
           pytest apps/health/test_financial_restore.py -q
       - name: Production deployment checks
         env:

@@ -1,6 +1,6 @@
 # Production Operations Readiness
 
-This runbook records the operational controls required before a KankkuPro pilot. The preview deployment uses native Python on Render, Neon PostgreSQL, and Brevo SMTP. Production Neon recovery coverage and external error tracking have not been configured or verified. It does not claim that backups, alerting, or recovery are configured.
+This runbook records the operational controls required before a KankkuPro pilot. The preview deployment uses native Python on Render, Neon PostgreSQL, and Brevo SMTP. Neon Free six-hour history and an isolated point-in-time branch drill have been verified. External error tracking and scheduled external backup delivery remain unverified. See [encrypted backups](encrypted-backups.md) for the prepared B2 integration and activation gates.
 
 ## Current application controls
 
@@ -50,7 +50,7 @@ A production owner must complete and record this drill after selecting the datab
 5. Verify schema migration state and reconcile tenant, customer, invoice, and payment totals when those financial modules are implemented.
 6. Remove the isolated restored database and record who performed and reviewed the drill.
 
-Do not put production connection strings, credentials, or customer exports in this repository or in CI logs. No backup schedule or restore command is prescribed here because the hosting and Neon plan are still open decisions.
+Do not put production connection strings, credentials, or customer exports in this repository or in CI logs. The prepared daily encrypted B2 workflow and recovery procedure are documented in [encrypted backups](encrypted-backups.md); live activation and a provider-backed encrypted restore remain required.
 
 ## Incident response
 
@@ -91,4 +91,4 @@ SMTP transport/authentication failures return a private 503 recovery page with a
 
 ## Operational gaps
 
-The repository currently has no provider configured for external error tracking, uptime alert routing, backup scheduling, or restore automation. Performance objectives also have not been measured against representative tenant data. These are deployment and decision gates, not completed controls. The pilot gate remains blocked until they are configured and verified alongside the commercial workflow.
+External runtime error-alert routing remains unconfigured. Availability checks and encrypted-backup/restore tooling exist; scheduled B2 delivery remains disabled pending private credentials, key custody and a verified provider-backed restore. Performance objectives also have not been measured against representative tenant data. These are deployment and decision gates, not completed controls. The pilot gate remains blocked until they are configured and verified alongside the commercial workflow.
