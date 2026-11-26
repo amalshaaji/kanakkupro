@@ -43,6 +43,10 @@ The production comparison was against its current state after branch creation, n
 
 ## Remaining release evidence
 
+An additional automated **local PostgreSQL 18 logical restore** passed on 2026-11-26 (`apps/health/test_financial_restore.py`, 1 passed). It created an issued invoice, credit note, two payments and one reversal through application services, then ran real pg_dump/pg_restore into a new empty database. All manifest digests matched, audit records were nonempty, and application selectors on the restored database reconciled adjusted sales 88.50, receipts 68.00 and outstanding 20.50. Both databases were disposable local test databases; no provider or live financial records were changed. This covers logical recovery of representative financial records, while provider point-in-time recovery with those records and end-to-end application recovery remain pending.
+
+CI runs this opt-in test with PostgreSQL 16 clients against its local test service. For a trusted local test database with database-creation privileges, run `RUN_FINANCIAL_RESTORE=1 pytest apps/health/test_financial_restore.py -q`; set `RESTORE_PG_BIN` if client binaries are outside PATH. The test refuses hosted connections and source names without the `test_` prefix, creates a UUID-named target, and drops only that target in cleanup. It sends no email and contacts no payment provider.
+
 1. Approve retention and recovery objectives, including coverage beyond the observed six-hour window and protection from project/account loss. Keep MFA encryption keys recoverable separately from the database.
 2. Repeat an isolated drill with representative invoices, partial/final payments, corrections/reversals, and audit records. Existing financial tables were empty, so this drill cannot establish nonempty financial reconciliation.
 3. Connect an isolated application to the recovered target and verify login/MFA, tenant isolation, invoice PDF and financial reports. This drill verified database queries only.

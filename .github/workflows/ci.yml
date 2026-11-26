@@ -45,6 +45,13 @@ jobs:
       - run: python manage.py check
       - run: python manage.py makemigrations --check --dry-run
       - run: pytest
+      - name: Financial dump and restore reconciliation
+        env:
+          RUN_FINANCIAL_RESTORE: "1"
+          RESTORE_PG_BIN: /usr/lib/postgresql/16/bin
+        run: |
+          sudo apt-get update && sudo apt-get install -y postgresql-client-16
+          pytest apps/health/test_financial_restore.py -q
       - name: Production deployment checks
         env:
           DJANGO_SETTINGS_MODULE: config.settings.production
