@@ -8,9 +8,10 @@
 {% include "partials/page_heading.html" with eyebrow=request.tenant.name heading="Reports" description="A snapshot of customer, catalog, and team activity in this business." %}
 
 <div class="alert alert-info mb-6" role="status">
-  <span>Financial totals and sales reports will appear after invoicing and payments are available. Activity timestamps below are shown in UTC.</span>
+  <span>Review dated sales documents, customer sales, receipts, and reversals in financial reports. Activity timestamps below are shown in UTC.</span>
 </div>
 
+<a class="btn btn-primary mb-6" href="{% url 'reports:financial' %}">Open financial reports</a>
 <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Business overview">
   <article class="card border border-base-300 bg-base-100 shadow-sm"><div class="card-body"><p class="text-sm text-base-content/60">Active customers</p><p class="text-3xl font-semibold">{{ customer_counts.active_count }}</p><p class="text-sm text-base-content/60">{{ customer_counts.archived_count }} archived</p></div></article>
   <article class="card border border-base-300 bg-base-100 shadow-sm"><div class="card-body"><p class="text-sm text-base-content/60">Active catalog items</p><p class="text-3xl font-semibold">{{ catalog_counts.active_count }}</p><p class="text-sm text-base-content/60">{{ catalog_counts.archived_count }} archived</p></div></article>

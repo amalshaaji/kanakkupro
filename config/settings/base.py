@@ -80,6 +80,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "apps.accounts.delivery.EmailDeliveryMiddleware",
     "apps.accounts.security.AdminMFAMiddleware",
     "apps.accounts.security.PrivateResponseMiddleware",
     "apps.tenants.middleware.ActiveTenantMiddleware",
@@ -197,6 +198,10 @@ STORAGES = {
 EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
 )
+# Keep deployment input compatible with standard Django SMTP configuration.
+if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
+    EMAIL_BACKEND = "apps.accounts.delivery.SafeSMTPBackend"
+EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "15"))
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")

@@ -1,0 +1,2 @@
+{% load report_urls %}
+{% if page.paginator.num_pages > 1 %}<nav aria-label="{{ parameter }} pagination" class="flex gap-3 my-3">{% if page.has_previous %}<a class="btn btn-outline btn-sm" href="{% report_page_url parameter page.previous_page_number %}">Previous</a>{% endif %}<span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a class="btn btn-outline btn-sm" href="{% report_page_url parameter page.next_page_number %}">Next</a>{% endif %}</nav>{% endif %}

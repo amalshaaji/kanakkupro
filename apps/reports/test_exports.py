@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.http import HttpResponse
 from django.test import SimpleTestCase
 
@@ -5,6 +7,10 @@ from apps.reports.views import _export_csv, _safe_csv_cell
 
 
 class CsvSafetyTests(SimpleTestCase):
+    def test_negative_money_is_exported_as_a_number_but_text_is_escaped(self):
+        self.assertEqual(_safe_csv_cell(Decimal("-29.50")), "-29.50")
+        self.assertEqual(_safe_csv_cell("-29.50"), "'-29.50")
+
     def test_formula_prefixes_are_neutralized(self):
         for unsafe in ("=1+1", "+1+1", "-1+1", "@SUM(A1:A2)", "\tvalue"):
             with self.subTest(value=unsafe):

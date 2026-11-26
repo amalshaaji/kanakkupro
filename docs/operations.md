@@ -1,6 +1,6 @@
 # Production Operations Readiness
 
-This runbook records the operational controls required before a KankkuPro pilot. It is provider independent because the hosting provider, production Neon plan, and email provider have not been selected. It does not claim that backups, alerting, or recovery are configured.
+This runbook records the operational controls required before a KankkuPro pilot. The preview deployment uses native Python on Render, Neon PostgreSQL, and Brevo SMTP. Production Neon recovery coverage and external error tracking have not been configured or verified. It does not claim that backups, alerting, or recovery are configured.
 
 ## Current application controls
 
@@ -80,6 +80,12 @@ Do not put production connection strings, credentials, or customer exports in th
 - Check provider status, credentials, sender verification, and delivery logs without copying message tokens into incident notes.
 - Keep account flows under observation until delivery is restored; do not weaken email verification or authentication controls to bypass the outage.
 - Send a test message to an operator controlled account and verify delivery before closing the incident.
+
+## Monitoring and email recovery
+
+The `Availability check` GitHub Actions workflow checks the public readiness endpoint every 30 minutes and supports manual execution. Configure GitHub workflow-failure notifications and verify delivery to the operator. Scheduling can be delayed; this is a baseline availability check, not a real-time error-monitoring service or an availability SLO measurement. Do not deliberately fail the production service to test it; use a controlled test URL or test workflow.
+
+SMTP transport/authentication failures return a private 503 recovery page with a request ID. Logs record only a safe failure category, never SMTP response text or credentials. Email attempts have a 15-second timeout. Account verification is not bypassed. Invitations already committed before delivery failure remain pending; revoke and recreate an undelivered invitation after the provider is fixed. No durable automatic retry queue is claimed.
 
 ## Operational gaps
 

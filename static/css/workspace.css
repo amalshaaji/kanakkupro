@@ -27,3 +27,5 @@ h1,h2,h3{letter-spacing:-.035em}a,button,input,select{touch-action:manipulation}
 .brand-mark{display:block;width:38px;height:38px;flex-shrink:0}.preview-brand img{display:block;width:26px;height:26px;flex-shrink:0}
 
 .brand-wordmark{display:block;width:174px;height:auto;max-height:74px;object-fit:contain;flex-shrink:0}@media(max-width:480px){.brand-wordmark{width:145px}}
+
+.report-filter-grid,.report-total-grid{display:grid;gap:1rem;grid-template-columns:repeat(3,minmax(0,1fr));align-items:end}.report-filter-grid button[type=submit]{margin:0}.report-total-grid{align-items:stretch}.report-total-grid strong{font-size:1.4rem;font-variant-numeric:tabular-nums}@media(max-width:639px){.report-filter-grid,.report-total-grid{grid-template-columns:1fr}}

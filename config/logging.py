@@ -40,6 +40,7 @@ class SafeJsonFormatter(logging.Formatter):
             "duration_ms",
             "route",
             "dependency",
+            "delivery_reason",
         ):
             value = getattr(record, name, None)
             if value is not None:

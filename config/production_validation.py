@@ -44,7 +44,10 @@ def validate_production_environment(env):
         "django.core.mail.backends.dummy.EmailBackend",
     }:
         raise ImproperlyConfigured("Configure a real production EMAIL_BACKEND.")
-    if backend == "django.core.mail.backends.smtp.EmailBackend":
+    if backend in {
+        "django.core.mail.backends.smtp.EmailBackend",
+        "apps.accounts.delivery.SafeSMTPBackend",
+    }:
         if not env.get("EMAIL_HOST"):
             raise ImproperlyConfigured("Set EMAIL_HOST for the SMTP backend.")
         tls = env.get("EMAIL_USE_TLS", "True").lower() == "true"

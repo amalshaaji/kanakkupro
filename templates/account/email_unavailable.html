@@ -1,0 +1,10 @@
+{% extends "allauth/layouts/base.html" %}
+{% block head_title %}Email temporarily unavailable{% endblock %}
+{% block content %}
+<h1>Email is temporarily unavailable</h1>
+<p>We couldn't send the email needed to complete this request. Your account's verification requirements remain in place.</p>
+<p>Please wait a minute and try again. If you just registered, your account may already exist; try signing in instead of registering again.</p>
+{% if request.tenant %}<p>If you were inviting a teammate, the invitation may already be saved. Review pending invitations, revoke the unsent invitation, and send a new one after email delivery is restored.</p><a class="btn btn-outline" href="{% url 'tenants:team' %}">Review invitations</a>{% endif %}
+<a class="btn btn-primary" href="{% url 'account_login' %}">Return to sign in</a>
+<p class="text-xs">Support reference: {{ request.request_id|default:"unavailable" }}</p>
+{% endblock %}

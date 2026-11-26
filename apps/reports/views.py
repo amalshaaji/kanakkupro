@@ -1,4 +1,5 @@
 import csv
+from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q
@@ -160,8 +161,71 @@ def _export_csv(*, filename, queryset, headers, row_values):
 
 
 def _safe_csv_cell(value):
+    if isinstance(value, (Decimal, int)) and not isinstance(value, bool):
+        return str(value)
     if not isinstance(value, str):
         value = str(value)
     if value.startswith(("=", "+", "-", "@", "\t", "\r")):
         return f"'{value}"
     return value
+
+
+@login_required
+@tenant_permission_required("reports.view")
+def financial_reports(request):
+    from django.core.paginator import Paginator
+
+    from apps.reports.financial import financial_report
+    from apps.reports.forms import ReportPeriodForm
+
+    form = ReportPeriodForm(request.GET)
+    context = {"period_form": form}
+    valid = form.is_valid()
+    if valid:
+        report = financial_report(request.tenant, form.cleaned_data)
+        context.update(report)
+        for name, key in (
+            ("documents", "dpage"),
+            ("payments", "ppage"),
+            ("reversals", "rpage"),
+            ("customer_sales", "cpage"),
+        ):
+            context[name] = Paginator(report[name], 25).get_page(request.GET.get(key))
+        context["can_export"] = request.tenant_membership.role in REPORT_EXPORT_ROLES
+    return render(
+        request, "reports/financial.html", context, status=200 if valid else 400
+    )
+
+
+@login_required
+@tenant_permission_required("reports.export")
+def export_financial_documents(request):
+    from apps.reports.financial import financial_report
+    from apps.reports.forms import ReportPeriodForm
+
+    form = ReportPeriodForm(request.GET)
+    if not form.is_valid():
+        return HttpResponse("Invalid report dates.", status=400)
+    report = financial_report(request.tenant, form.cleaned_data)
+    return _export_csv(
+        filename="financial-documents.csv",
+        queryset=report["documents"],
+        headers=(
+            "number",
+            "kind",
+            "customer",
+            "issue_date",
+            "due_date",
+            "currency",
+            "signed_total",
+        ),
+        row_values=lambda invoice: (
+            invoice.number,
+            invoice.get_kind_display(),
+            invoice.buyer_snapshot.get("name", invoice.customer.name),
+            invoice.issue_date,
+            invoice.due_date,
+            invoice.currency,
+            invoice.signed_total,
+        ),
+    )
