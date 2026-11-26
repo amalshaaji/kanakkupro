@@ -3,11 +3,27 @@ import subprocess
 from unittest.mock import patch
 
 from django.test import SimpleTestCase
-from scripts.render_start import RELEASE_LOCK, main, missing_configuration, release
+from scripts.render_start import (
+    RELEASE_LOCK,
+    command_failure,
+    main,
+    missing_configuration,
+    release,
+)
 from scripts.restore_drill import assert_empty_target, client_env, drill
 
 
 class ReleaseTests(SimpleTestCase):
+    def test_failure_diagnostics_only_include_safe_field_names_and_check_ids(self):
+        error = command_failure(
+            "check", "SECRET_KEY invalid secret-password; security.W004; postgresql://private"
+        )
+        self.assertIn("SECRET_KEY", str(error))
+        self.assertIn("security.W004", str(error))
+        self.assertNotIn("secret-password", str(error))
+        self.assertNotIn("postgresql", str(error))
+
+
     @patch("scripts.render_start.release")
     @patch("scripts.render_start.sys.stderr")
     def test_missing_configuration_stops_before_connecting(self, stderr, start):

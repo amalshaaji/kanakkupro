@@ -1,6 +1,7 @@
 """Serialized, additive staging release followed by the WSGI process."""
 
 import os
+import re
 import subprocess
 import sys
 from urllib.parse import parse_qs, urlsplit
@@ -8,6 +9,22 @@ from urllib.parse import parse_qs, urlsplit
 import psycopg
 
 RELEASE_LOCK = 762440619
+
+
+class ReleaseError(RuntimeError):
+    """Only application-controlled, credential-free diagnostic text."""
+
+
+def command_failure(command, stderr):
+    # Extract only known field names/check IDs, never exception text or values.
+    fields = [key for key in (
+        "SECRET_KEY", "ALLOWED_HOSTS", "DATABASE_URL", "EMAIL_BACKEND",
+        "EMAIL_HOST", "EMAIL_USE_TLS", "EMAIL_USE_SSL", "DEFAULT_FROM_EMAIL",
+        "CSRF_TRUSTED_ORIGINS", "MFA_ENCRYPTION_KEYS", "TRUST_X_FORWARDED_PROTO",
+    ) if re.search(r"\b" + key + r"\b", stderr)]
+    checks = sorted(set(re.findall(r"\bsecurity\.[WE]\d{3}\b", stderr)))
+    hints = ", ".join(fields + checks) or "no safe diagnostic available"
+    return ReleaseError(f"Release command failed: {command}; inspect {hints}.")
 
 
 def missing_configuration(env):
@@ -24,12 +41,12 @@ def release(env):
     url = env.get("MIGRATION_DATABASE_URL") or env.get("DATABASE_URL", "")
     host = urlsplit(url).hostname or ""
     if not host or "-pooler" in host:
-        raise RuntimeError("Configure a direct MIGRATION_DATABASE_URL for releases.")
+        raise ReleaseError("Configure a direct MIGRATION_DATABASE_URL for releases.")
     app = urlsplit(env.get("DATABASE_URL", ""))
     app_host = (app.hostname or "").split(".")
     app_host[0] = app_host[0].removesuffix("-pooler")
     if ".".join(app_host) != host or app.path != urlsplit(url).path:
-        raise RuntimeError(
+        raise ReleaseError(
             "Application and migration endpoints must address the same Neon database."
         )
     if parse_qs(urlsplit(url).query).get("sslmode") not in (
@@ -37,11 +54,13 @@ def release(env):
         ["verify-ca"],
         ["verify-full"],
     ):
-        raise RuntimeError("Release connections must require TLS.")
+        raise ReleaseError("Release connections must require TLS.")
     child_env = {**env, "DATABASE_URL": url}
     # Keep the dedicated session alive across child commands. A transaction-
     # pooled endpoint cannot safely hold a session advisory lock.
+    print("Release stage: connecting to database.", flush=True)
     with psycopg.connect(url, autocommit=True, connect_timeout=15) as conn:
+        print("Release stage: acquiring migration lock.", flush=True)
         conn.execute("SET lock_timeout = '60s'")
         conn.execute("SELECT pg_advisory_lock(%s)", [RELEASE_LOCK])
         try:
@@ -51,6 +70,7 @@ def release(env):
                 ["createcachetable"],
                 ["migrate", "--check"],
             ):
+                print(f"Release stage: {args[0]}.", flush=True)
                 result = subprocess.run(
                     [sys.executable, "manage.py", *args],
                     env=child_env,
@@ -59,7 +79,7 @@ def release(env):
                     timeout=300,
                 )
                 if result.returncode:
-                    raise RuntimeError(f"Release command failed: {args[0]}.")
+                    raise command_failure(args[0], result.stderr or "")
                 print(f"Release command completed: {args[0]}", flush=True)
         finally:
             conn.execute("SELECT pg_advisory_unlock(%s)", [RELEASE_LOCK])
@@ -76,6 +96,18 @@ def main():
         return 1
     try:
         release(dict(os.environ))
+    except ReleaseError as error:
+        print(str(error), file=sys.stderr)
+        return 1
+    except psycopg.Error:
+        print("Database connection/lock failed; check Neon DATABASE_URL, password, "
+              "hostname (no backslashes), TLS, and database availability.",
+              file=sys.stderr)
+        return 1
+    except subprocess.TimeoutExpired:
+        print("Release command timed out; inspect database locks and migrations.",
+              file=sys.stderr)
+        return 1
     except Exception:
         # Driver/child error text may include connection or SMTP details.
         print(
