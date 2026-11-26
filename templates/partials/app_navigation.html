@@ -1,8 +1,9 @@
 <nav aria-label="Workspace" class="workspace-navigation flex flex-col gap-1">
-  <div class="workspace-label">YOUR WORKSPACE</div>
+  <div class="workspace-label">WORKSPACE</div>
   <a class="btn btn-ghost justify-start {% if request.resolver_match.view_name == 'dashboard:index' %}menu-active{% endif %}" href="{% url 'dashboard:index' %}" {% if request.resolver_match.view_name == 'dashboard:index' %}aria-current="page"{% endif %}>
     <svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7"/><path d="M5 9v12h14V9"/><path d="M9 21v-7h6v7"/></svg> Overview
   </a>
+  <div class="workspace-label nav-section-label">SALES</div>
   <a class="btn btn-ghost justify-start {% if request.resolver_match.app_name == 'customers' %}menu-active{% endif %}" href="{% url 'customers:list' %}" {% if request.resolver_match.app_name == 'customers' %}aria-current="page"{% endif %}>
     <svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg> Customers
   </a>
@@ -10,17 +11,24 @@
     <svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 7 3-3h4l3 3 3 1-2 4v8H6v-8L4 8l3-1Z"/><path d="M9 12h6"/><path d="M10 4v4"/><path d="M14 4v4"/></svg> Catalog
   </a>
   <a class="btn btn-ghost justify-start {% if request.resolver_match.app_name == 'sales' or request.resolver_match.app_name == 'payments' %}menu-active{% endif %}" href="{% url 'sales:list' %}" {% if request.resolver_match.app_name == 'sales' or request.resolver_match.app_name == 'payments' %}aria-current="page"{% endif %}><svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4M9 12h6M9 16h6"/></svg> Invoices</a>
-  <a class="btn btn-ghost justify-start {% if request.resolver_match.app_name == 'reports' %}menu-active{% endif %}" href="{% url 'reports:home' %}" {% if request.resolver_match.app_name == 'reports' %}aria-current="page"{% endif %}>
+  <div class="workspace-label nav-section-label">INSIGHTS</div>
+  <a class="btn btn-ghost justify-start {% if request.resolver_match.view_name == 'reports:home' %}menu-active{% endif %}" href="{% url 'reports:home' %}" {% if request.resolver_match.view_name == 'reports:home' %}aria-current="page"{% endif %}>
     <svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-5 5"/></svg> Reports
   </a>
+  <a class="btn btn-ghost justify-start {% if request.resolver_match.view_name == 'reports:financial' %}menu-active{% endif %}" href="{% url 'reports:financial' %}" {% if request.resolver_match.view_name == 'reports:financial' %}aria-current="page"{% endif %}>
+    <svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg> Financial reports
+  </a>
+  <div class="workspace-label nav-section-label">SETTINGS</div>
   {% if request.can_manage_tenant_team %}
     <a class="btn btn-ghost justify-start {% if request.resolver_match.view_name == 'tenants:team' %}menu-active{% endif %}" href="{% url 'tenants:team' %}" {% if request.resolver_match.view_name == 'tenants:team' %}aria-current="page"{% endif %}>
       <svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Team access
     </a>
   {% endif %}
-  <div class="mt-6 border-t border-base-300 pt-4">
-    <p class="truncate px-3 text-xs text-base-content/60">Signed in as</p>
-    <a class="btn btn-ghost btn-sm mt-2 w-full justify-start" href="{% url 'mfa_index' %}">Account security</a>
-    <p class="mt-1 truncate px-3 text-sm font-medium" title="{{ request.user.email }}">{{ request.user.email }}</p>
+  <a class="btn btn-ghost justify-start" href="{% url 'mfa_index' %}">
+    <svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 8 3v6c0 5-8 9-8 9S4 17 4 12V6z"/><path d="m8 12 3 3 5-6"/></svg> Account security
+  </a>
+  <div class="sidebar-identity">
+    <span class="sidebar-avatar" aria-hidden="true">{{ request.user.email|slice:":1"|upper }}</span>
+    <div><p class="sidebar-identity-label">Signed in as</p><p class="sidebar-email" title="{{ request.user.email }}">{{ request.user.email }}</p></div>
   </div>
 </nav>
