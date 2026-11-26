@@ -1,8 +1,9 @@
+{% load static %}
 <header class="site-header sticky top-0 z-30 border-b border-base-300 bg-base-100">
   <div class="navbar mx-auto h-16 w-full max-w-[100rem] px-4 sm:px-6 lg:px-10">
     <div class="flex-1">
       <a class="flex items-center gap-2 rounded-lg text-lg font-bold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary" href="{% url 'home' %}">
-        <span class="grid size-9 place-items-center rounded-xl bg-primary text-primary-content" aria-hidden="true">K</span>
+        <img class="brand-mark" src="{% static 'brand/kanakkupro.svg' %}" width="38" height="38" alt="">
         KanakkuPro
       </a>
     </div>

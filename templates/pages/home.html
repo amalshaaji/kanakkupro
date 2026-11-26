@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}KanakkuPro | Your business, beautifully organized{% endblock %}
 {% block content %}
 <section class="landing-hero">
@@ -10,7 +11,7 @@
     <div class="hero-footnote">One place for customers, invoices, and payments.</div>
   </div>
   <div class="product-preview" aria-label="Illustrative workspace preview">
-    <div class="preview-top"><span class="preview-brand">K <span>Workspace overview</span></span><span class="preview-tag">ILLUSTRATION</span></div>
+    <div class="preview-top"><span class="preview-brand"><img src="{% static 'brand/kanakkupro.svg' %}" width="26" height="26" alt=""> <span>Workspace overview</span></span><span class="preview-tag">ILLUSTRATION</span></div>
     <div class="preview-body"><div class="preview-greeting"><div><span class="eyebrow">THE BIG PICTURE</span><h2>A clearer kind of workday.</h2></div><span class="preview-sun" aria-hidden="true">☀</span></div>
       <div class="preview-metrics"><div><span>Customers</span><strong>Connected.</strong><small>Every relationship, in one place.</small></div><div><span>Invoices</span><strong>Organized.</strong><small>From draft to payment.</small></div></div>
       <div class="preview-invoice"><div class="preview-document" aria-hidden="true">↗</div><div><strong>From work done to payment received.</strong><p>A simple flow for every invoice.</p></div></div>
