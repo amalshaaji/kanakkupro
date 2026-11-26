@@ -1,5 +1,9 @@
 <nav aria-label="Workspace" class="workspace-navigation flex flex-col gap-1">
-  <div class="workspace-label">WORKSPACE</div>
+  <div class="workspace-label">YOUR WORKSPACE</div>
+  <div class="sidebar-identity">
+    <span class="sidebar-avatar" aria-hidden="true">{{ request.user.email|slice:":1"|upper }}</span>
+    <div><p class="sidebar-identity-label">Signed in as</p><p class="sidebar-email" title="{{ request.user.email }}">{{ request.user.email }}</p></div>
+  </div>
   <a class="btn btn-ghost justify-start {% if request.resolver_match.view_name == 'dashboard:index' %}menu-active{% endif %}" href="{% url 'dashboard:index' %}" {% if request.resolver_match.view_name == 'dashboard:index' %}aria-current="page"{% endif %}>
     <svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7"/><path d="M5 9v12h14V9"/><path d="M9 21v-7h6v7"/></svg> Overview
   </a>
@@ -27,8 +31,5 @@
   <a class="btn btn-ghost justify-start" href="{% url 'mfa_index' %}">
     <svg aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 8 3v6c0 5-8 9-8 9S4 17 4 12V6z"/><path d="m8 12 3 3 5-6"/></svg> Account security
   </a>
-  <div class="sidebar-identity">
-    <span class="sidebar-avatar" aria-hidden="true">{{ request.user.email|slice:":1"|upper }}</span>
-    <div><p class="sidebar-identity-label">Signed in as</p><p class="sidebar-email" title="{{ request.user.email }}">{{ request.user.email }}</p></div>
-  </div>
+
 </nav>

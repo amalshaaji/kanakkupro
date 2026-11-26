@@ -26,7 +26,7 @@
           <a class="btn btn-ghost btn-sm" href="{% url 'tenants:create' %}">Create business</a>
         {% endif %}
         {% if not request.tenant %}<a class="btn btn-ghost btn-sm" href="{% url 'dashboard:index' %}">Dashboard</a>{% endif %}
-        <span class="hidden max-w-48 truncate text-sm text-base-content/60 md:inline">{{ request.user.email }}</span>
+        {% if not request.tenant %}<span class="hidden max-w-48 truncate text-sm text-base-content/60 md:inline">{{ request.user.email }}</span>{% endif %}
         <form method="post" action="{% url 'account_logout' %}">
           {% csrf_token %}
           <button class="btn btn-outline btn-sm" type="submit">Sign out</button>
