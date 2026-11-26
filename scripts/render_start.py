@@ -10,6 +10,16 @@ import psycopg
 RELEASE_LOCK = 762440619
 
 
+def missing_configuration(env):
+    required = [
+        "DATABASE_URL", "SECRET_KEY", "MFA_ENCRYPTION_KEYS",
+        "EMAIL_BACKEND", "DEFAULT_FROM_EMAIL",
+    ]
+    if env.get("EMAIL_BACKEND") == "django.core.mail.backends.smtp.EmailBackend":
+        required.append("EMAIL_HOST")
+    return [key for key in required if not env.get(key, "").strip()]
+
+
 def release(env):
     url = env.get("MIGRATION_DATABASE_URL") or env.get("DATABASE_URL", "")
     host = urlsplit(url).hostname or ""
@@ -56,6 +66,14 @@ def release(env):
 
 
 def main():
+    missing = missing_configuration(os.environ)
+    if missing:
+        print(
+            "Staging configuration is missing: " + ", ".join(missing)
+            + ". Set these in Render Environment; web server was not started.",
+            file=sys.stderr,
+        )
+        return 1
     try:
         release(dict(os.environ))
     except Exception:

@@ -3,11 +3,32 @@ import subprocess
 from unittest.mock import patch
 
 from django.test import SimpleTestCase
-from scripts.render_start import RELEASE_LOCK, release
+from scripts.render_start import RELEASE_LOCK, main, missing_configuration, release
 from scripts.restore_drill import assert_empty_target, client_env, drill
 
 
 class ReleaseTests(SimpleTestCase):
+    @patch("scripts.render_start.release")
+    @patch("scripts.render_start.sys.stderr")
+    def test_missing_configuration_stops_before_connecting(self, stderr, start):
+        with patch.dict(os.environ, {"SECRET_KEY": "private-value"}, clear=True):
+            self.assertEqual(main(), 1)
+        start.assert_not_called()
+        output = "".join(call.args[0] for call in stderr.write.call_args_list)
+        self.assertIn("DATABASE_URL", output)
+        self.assertIn("MFA_ENCRYPTION_KEYS", output)
+        self.assertNotIn("private-value", output)
+
+    def test_smtp_configuration_requires_host(self):
+        env = dict.fromkeys(
+            ["DATABASE_URL", "SECRET_KEY", "MFA_ENCRYPTION_KEYS", "DEFAULT_FROM_EMAIL"],
+            "present",
+        )
+        env["EMAIL_BACKEND"] = "django.core.mail.backends.smtp.EmailBackend"
+        self.assertEqual(missing_configuration(env), ["EMAIL_HOST"])
+        env["EMAIL_HOST"] = "smtp.example.test"
+        self.assertEqual(missing_configuration(env), [])
+
     @patch("scripts.render_start.subprocess.run")
     @patch("scripts.render_start.psycopg.connect")
     def test_release_serializes_commands_and_uses_direct_endpoint(self, connect, run):
