@@ -38,18 +38,48 @@ SAFE_PROVIDER_CODES = frozenset(
         "SlowDown",
     }
 )
+SAFE_FAILURE_KINDS = frozenset(
+    {
+        "ClientError",
+        "ParamValidationError",
+        "MissingDependencyException",
+        "EndpointConnectionError",
+        "ConnectionClosedError",
+        "HTTPClientError",
+        "ReadTimeoutError",
+        "ConnectTimeoutError",
+        "SSLError",
+        "FlexibleChecksumError",
+        "UnsupportedChecksumAlgorithmError",
+        "UnseekableStreamError",
+        "NoCredentialsError",
+        "PartialCredentialsError",
+        "TypeError",
+        "ValueError",
+        "RuntimeError",
+        "OSError",
+        "AttributeError",
+    }
+)
 
 
 def safe_provider_failure(error):
     """Return fixed error codes and status only, never provider response text."""
+    kind = type(error).__name__
+    result = {
+        "failure_kind": kind if kind in SAFE_FAILURE_KINDS else "unknown",
+        "provider_code": "unknown",
+        "http_status": None,
+    }
     response = getattr(error, "response", None)
     if not isinstance(response, dict):
-        return {"provider_code": "unknown", "http_status": None}
+        return result
     detail = response.get("Error")
     code = detail.get("Code") if isinstance(detail, dict) else None
     metadata = response.get("ResponseMetadata")
     status = metadata.get("HTTPStatusCode") if isinstance(metadata, dict) else None
     return {
+        **result,
         "provider_code": (
             code if isinstance(code, str) and code in SAFE_PROVIDER_CODES else "unknown"
         ),

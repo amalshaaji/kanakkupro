@@ -198,17 +198,20 @@ def test_provider_failure_exposes_only_allowlisted_code_and_http_status():
         "ResponseMetadata": {"HTTPStatusCode": 403, "private": "secret"},
     }
     assert safe_provider_failure(error) == {
+        "failure_kind": "RuntimeError",
         "provider_code": "AccessDenied",
         "http_status": 403,
     }
     error.response["Error"]["Code"] = "secret-database-password"
     error.response["ResponseMetadata"]["HTTPStatusCode"] = "private-secret"
     assert safe_provider_failure(error) == {
+        "failure_kind": "RuntimeError",
         "provider_code": "unknown",
         "http_status": None,
     }
     error.response = None
     assert safe_provider_failure(error) == {
+        "failure_kind": "RuntimeError",
         "provider_code": "unknown",
         "http_status": None,
     }
