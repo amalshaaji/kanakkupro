@@ -168,6 +168,13 @@ readback. See [object evidence](evidence/phase6-b2-backup-2026-11-28.json).
 Provider-backed restore and a later scheduled delivery remain open in
 [the backup runbook](encrypted-backups.md).
 
+On 2026-11-28 the isolated encrypted-file restore verifier passed sixteen safeguard
+tests and both real PostgreSQL recovery tests. It verifies the downloaded digest,
+restores only into an empty local drill database, checks migrations and generates
+the financial/audit manifest with mail disabled. The full financial fixture
+manifest matched after actual age decryption and restoration. The live B2 object
+has not yet been downloaded for this verifier; its recovery gate remains open.
+
 ## Remaining operator gates
 
 - Restore the verified B2 object into an isolated database and prove a later

@@ -122,7 +122,7 @@ class EncryptedFinancialRestoreTests(FinancialFixtures, TransactionTestCase):
         from pathlib import Path
 
         from scripts.encrypted_backup import backup, command
-        from scripts.restore_drill import client_env, snapshot
+        from scripts.restore_encrypted_backup import restore_encrypted
 
         from apps.health.management.commands.restore_manifest import manifest
         from apps.health.test_encrypted_backup import storage_client
@@ -188,39 +188,25 @@ class EncryptedFinancialRestoreTests(FinancialFixtures, TransactionTestCase):
             self.assertEqual(result["status"], "uploaded_and_verified")
             self.assertTrue(captured[0].startswith(b"age-encryption.org/v1"))
             encrypted = Path(folder) / "backup.age"
-            plain = Path(folder) / "restore.dump"
             encrypted.write_bytes(captured[0])
-            command(
-                [
-                    age_bin,
-                    "--decrypt",
-                    "--identity",
-                    str(identity),
-                    "--output",
-                    str(plain),
-                    str(encrypted),
-                ],
-                dict(os.environ),
-            )
             with psycopg.connect(source, autocommit=True) as admin:
                 admin.execute(
                     sql.SQL("CREATE DATABASE {}").format(sql.Identifier(target_name))
                 )
                 try:
-                    command(
-                        [
-                            str(pg_bin / "pg_restore"),
-                            "--exit-on-error",
-                            "--single-transaction",
-                            "--no-owner",
-                            "--no-privileges",
-                            "--dbname",
-                            target_name,
-                            str(plain),
-                        ],
-                        client_env(target, dict(os.environ)),
+                    restored = restore_encrypted(
+                        {**os.environ, "RESTORE_DATABASE_URL": target},
+                        encrypted,
+                        identity,
+                        result["sha256"],
+                        pg_bin=str(pg_bin),
+                        age_bin=age_bin,
+                        expected_manifest=expected,
                     )
-                    self.assertEqual(snapshot(target, dict(os.environ)), expected)
+                    self.assertEqual(restored["status"], "restored_and_verified")
+                    self.assertEqual(restored["manifest"], expected)
+                    self.assertTrue(restored["source_manifest_compared"])
+                    self.assertTrue(restored["plaintext_removed"])
                 finally:
                     admin.execute(
                         sql.SQL("DROP DATABASE {} WITH (FORCE)").format(

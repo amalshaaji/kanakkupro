@@ -67,6 +67,43 @@ Backblaze advertises the first 10 GB of storage free. This job conservatively st
 
 ## Recovery drill
 
+The local verifier now automates checksum validation, age decryption, archive
+validation, transactional restoration, migration checks and the critical-model
+manifest. It only accepts a loopback target named `test_restore_` followed by a
+32-character hexadecimal UUID, and checks that target is empty twice. It does not
+create or drop databases. Load `RESTORE_DATABASE_URL` privately for a newly created
+drill database before running it. Keep the recovery identity file mode 0600 or
+stricter. A Backblaze key ID authenticates storage access; it is not the age
+identity used to decrypt this backup.
+
+For the verified run-10 object recorded above:
+
+```bash
+python -m scripts.restore_encrypted_backup \
+  --confirm-isolated-target \
+  --encrypted-file /private/scratch/database.dump.age \
+  --identity-file /protected/path/recovery.agekey \
+  --sha256 1084d7ce9cff3a9a2b6349e29511f709bb4a287c8683a20dbee0eb1e0a58939b \
+  --pg-bin /path/to/postgresql/bin \
+  --age-bin /path/to/age
+```
+
+It decrypts a private copy of the exact bytes whose digest was checked, so changing
+the downloaded file afterward cannot replace the restore input. Age and offline
+Django subprocesses receive no source-database or B2 credentials. Outbound mail
+and runtime alerts remain disabled. Private scratch files are removed on normal
+success and handled failure; the restored target remains for inspection and
+authorized cleanup. Errors report a fixed stage without exception text.
+
+Use `--expected-manifest /private/checkpoint.json` only for a checkpoint belonging
+to the same consistent source snapshot. Otherwise the result explicitly reports
+`source_manifest_compared: false`; a generated manifest alone does not establish
+source equality or financial reconciliation. Complete the business checks below.
+Eighteen local tests passed on 2026-11-28, including the actual encrypted financial
+dump/restore with an equal full manifest, hostile target/connection overrides,
+wrong digests, file substitution, target races and failure cleanup. Those tests use
+synthetic records; restoration of the live B2 object is still pending its download.
+
 1. Download a specific encrypted object version from the private bucket to a trusted recovery host. Verify its SHA-256 against the successful job's reported value. Keep download credentials private.
 2. With age installed, decrypt using the separately held private identity. Use a private scratch directory and `umask 077`. For example, with local file paths only:
 
