@@ -5,3 +5,5 @@ from .base import *  # noqa: F403
 SECRET_KEY = "offline-restore-verification-only-never-use-for-a-web-server"
 EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"
 ALLOWED_HOSTS = []
+RUNTIME_ALERTS_ENABLED = False
+RUNTIME_ALERT_EMAILS = []

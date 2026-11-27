@@ -8,6 +8,8 @@ ALLOWED_HOSTS = ["testserver", "localhost"]
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 DEPLOYMENT_ENVIRONMENT = "test"
+RUNTIME_ALERTS_ENABLED = False
+RUNTIME_ALERT_EMAILS = []
 
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},

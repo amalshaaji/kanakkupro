@@ -91,4 +91,13 @@ SMTP transport/authentication failures return a private 503 recovery page with a
 
 ## Operational gaps
 
-External runtime error-alert routing remains unconfigured. Scheduled availability checks have passed, and encrypted-backup/restore tooling exists. B2 credentials passed the read-only storage check; live upload, provider-backed recovery and scheduled backup delivery remain unverified pending transfer approval and independent recovery-key custody. Performance objectives also have not been measured against representative tenant data. These are deployment and decision gates, not completed controls. The pilot gate remains blocked until they are configured and verified alongside the commercial workflow.
+Payload-free runtime email alerts are implemented but their operator destination
+and live delivery remain unverified. Scheduled availability checks have passed,
+and encrypted-backup/restore tooling exists. B2 credentials passed the read-only
+storage check; live upload, provider-backed recovery and scheduled backup delivery
+remain unverified pending transfer approval and independent recovery-key custody.
+An isolated two-tenant HTTP workload has been measured; deployed latency/cold-start
+objectives remain unverified. See [Phase 6 verification](phase-6-verification.md).
+These are deployment and decision gates, not completed controls. The pilot gate
+remains blocked until they are configured and verified alongside the commercial
+workflow.

@@ -2,6 +2,10 @@
 
 Status: pilot preparation tooling is implemented; pilot admission is blocked by the unchecked Phase 6 gates below. A live Render service does not demonstrate production readiness.
 
+See [Phase 6 verification](phase-6-verification.md) for the isolated HTTP workload,
+browser acceptance evidence, safe runtime-alert implementation and remaining
+deployment decisions. These checks do not substitute for live provider evidence.
+
 The PRD numbering is authoritative: Phase 6 hardening, Phase 7 pilot, Phase 8 paid SaaS, Phase 9 expansion. Do not start subscription billing or claim the pilot is complete as a substitute for release verification.
 
 ## Phase 6 gate register
@@ -11,9 +15,9 @@ The PRD numbering is authoritative: Phase 6 hardening, Phase 7 pilot, Phase 8 pa
 | Email outage handling | SMTP failures produce a private 503 recovery page. A real application verification email was confirmed in the connected Gmail Spam folder on 2026-11-26; verification remains mandatory | Confirm fresh password-reset and invitation delivery; review inbox placement with the sender provider |
 | Financial reporting | Dated issued documents, customer sales, receipts, reversals, bounded pages and role-protected CSV | Run the owner-to-payment browser journey against an isolated staging tenant |
 | Availability monitoring | The push-triggered availability check passed; scheduled checks passed on 2026-11-27 at 03:44 and [09:58 Asia/Kolkata](https://github.com/amalshaaji/kanakkupro/actions/runs/45940107407). Existing CI/deployment-failure alert emails were confirmed in the connected inbox on 2026-11-26 | Verify runtime error-alert routing; scheduled jobs are best effort, not a 99.9% availability guarantee |
-| External error alerts | Structured errors include request ID, exception type and safe email failure category | Choose an error-tracking provider, configure safe event collection, and prove a test alert reaches the operator |
+| External error alerts | Structured errors include request ID, exception type and safe email failure category. Payload-free runtime email alerts and an operator test command are implemented, with shared-cache throttling and delivery-failure isolation | Configure the approved operator inbox over the existing transport and prove a test alert reaches it; retain independent availability monitoring |
 | Protected backup coverage | Live Neon Free coverage verified as 6 hours; an isolated point-in-time branch was created on 2026-11-26 and all 19 checked table counts/content fingerprints matched production. See [drill evidence](recovery-drill-2026-11-26.md). Financial tables were empty. GitHub backup secrets are configured. The [read-only B2 check](https://github.com/amalshaaji/kanakkupro/actions/runs/45964392351) passed on 2026-11-27; the original manual upload failed, and the fresh upload remains pending | Confirm transfer approval and separate recovery-key custody, then use the new diagnostics to prove encrypted upload, scheduled delivery and provider-backed restore. Measure end-to-end RPO/RTO |
-| Performance | Query-count regression tests cover invoice/dashboard and report growth; rows paginated | Run concurrent representative workloads and record latency/cold-start measurements; query counts alone are not a latency benchmark |
+| Performance | Query-count tests cover invoice/dashboard and report growth. A two-tenant local HTTP workload with 210 issued documents/1,010 lines passed 84 requests at four-client concurrency, p95 45.67 ms; financial totals were unchanged | Review the CI single-worker/PDF benchmark, then measure deployed latency and cold starts on the selected hosting plan |
 | Security / access | Production configuration, admin MFA, tenant/permission tests implemented | Verify deployed admin enrollment/recovery and least-privilege database/operator access; confirm exposed keys were replaced |
 | Accessibility / support / privacy | Responsive shell and operator runbooks exist | Complete critical keyboard/contrast checks and approve support, incident, retention/deletion, privacy and terms procedures |
 

@@ -66,6 +66,9 @@ These probes do not verify migration state, email delivery, backups, or restore 
 
 See [Production Operations Readiness](docs/operations.md) for the pre-pilot decisions, deployment checklist, backup/restore drill, and incident runbooks.
 
+See [Phase 6 verification](docs/phase-6-verification.md) for safe runtime alerts,
+disposable local workload/browser checks, and the remaining pilot release evidence.
+
 ## Checks and tests
 
 ```bash

@@ -27,7 +27,7 @@
     {% else %}
       {% include "partials/flash_messages.html" %}
     {% endif %}
-    <main id="main-content" class="mx-auto w-full max-w-6xl {% if request.user.is_authenticated and request.tenant %}{% else %}px-5 py-10 sm:px-8 sm:py-12 lg:px-10{% endif %}" {% if request.user.is_authenticated and request.tenant %}hx-indicator="#htmx-status"{% endif %}>
+    <main id="main-content" tabindex="-1" class="mx-auto w-full max-w-6xl {% if request.user.is_authenticated and request.tenant %}{% else %}px-5 py-10 sm:px-8 sm:py-12 lg:px-10{% endif %}" {% if request.user.is_authenticated and request.tenant %}hx-indicator="#htmx-status"{% endif %}>
       {% block breadcrumbs %}{% endblock %}
       {% block content %}{% endblock %}
     </main>

@@ -5,13 +5,16 @@
     "build:css": "npx @tailwindcss/cli -i ./assets/css/input.css -o ./static/css/app.css --minify",
     "watch:css": "npx @tailwindcss/cli -i ./assets/css/input.css -o ./static/css/app.css --watch",
     "build:vendor": "mkdir -p static/vendor && cp node_modules/htmx.org/dist/htmx.min.js static/vendor/htmx.min.js",
-    "build": "npm run build:css && npm run build:vendor"
+    "build": "npm run build:css && npm run build:vendor",
+    "test:browser": "playwright test"
   },
   "dependencies": {
     "daisyui": "^5.0.0",
     "htmx.org": "^2.0.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.1",
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/cli": "^4.0.0",
     "tailwindcss": "^4.0.0"
   }

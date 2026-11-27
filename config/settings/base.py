@@ -23,11 +23,15 @@ LOGGING = {
             "filters": ["request_context"],
             "formatter": "safe_json",
         },
+        "runtime_alerts": {
+            "class": "apps.health.alerts.RuntimeAlertHandler",
+            "level": "ERROR",
+        },
     },
     "root": {"handlers": ["console"], "level": "INFO"},
     "loggers": {
         "django.request": {
-            "handlers": ["console"],
+            "handlers": ["console", "runtime_alerts"],
             "level": "WARNING",
             "propagate": False,
         },
@@ -36,7 +40,16 @@ LOGGING = {
             "level": "WARNING",
             "propagate": False,
         },
-        "kanakkupro": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "kanakkupro": {
+            "handlers": ["console", "runtime_alerts"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "kanakkupro.runtime_alert_delivery": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
     },
 }
 
@@ -211,6 +224,14 @@ EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() == "true"
 DEFAULT_FROM_EMAIL = os.environ.get(
     "DEFAULT_FROM_EMAIL", "KankkuPro <noreply@example.com>"
 )
+RUNTIME_ALERTS_ENABLED = (
+    os.environ.get("RUNTIME_ALERTS_ENABLED", "false").lower() == "true"
+)
+RUNTIME_ALERT_EMAILS = [
+    address.strip()
+    for address in os.environ.get("RUNTIME_ALERT_EMAILS", "").split(",")
+    if address.strip()
+]
 TENANT_INVITATION_TTL_DAYS = int(os.environ.get("TENANT_INVITATION_TTL_DAYS", "7"))
 
 SESSION_COOKIE_HTTPONLY = True
