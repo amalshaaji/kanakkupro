@@ -1,3 +1,5 @@
+import base64
+import hashlib
 import io
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -83,6 +85,9 @@ def test_backup_uploads_only_ciphertext_and_checks_download_and_retention():
         assert kwargs["Bucket"] == BUCKET
         assert kwargs["Body"].read() == encrypted
         assert kwargs["ContentLength"] == len(encrypted)
+        assert kwargs["ContentMD5"] == base64.b64encode(
+            hashlib.md5(encrypted, usedforsecurity=False).digest()
+        ).decode("ascii")
         return {"VersionId": "synthetic-version"}
 
     client.put_object.side_effect = upload
@@ -166,6 +171,7 @@ def test_actual_backup_sdk_omits_continue_before_network():
         assert request.url.startswith("https://s3.us-east-005.backblazeb2.com/")
         assert "Expect" not in request.headers
         assert int(request.headers["Content-Length"]) == 9
+        assert "Content-MD5" in request.headers
         assert request.body.read() == b"synthetic"
         raise Prepared()
 
@@ -176,6 +182,9 @@ def test_actual_backup_sdk_omits_continue_before_network():
             Key="never-uploaded",
             Body=io.BytesIO(b"synthetic"),
             ContentLength=9,
+            ContentMD5=base64.b64encode(
+                hashlib.md5(b"synthetic", usedforsecurity=False).digest()
+            ).decode("ascii"),
         )
 
 

@@ -1,6 +1,7 @@
 """Read-only PostgreSQL dump, age encryption, and verified private B2 upload."""
 
 import argparse
+import base64
 import hashlib
 import json
 import os
@@ -202,6 +203,14 @@ def backup(
             raise ValueError("Backup size exceeds the conservative storage budget.")
         with encrypted.open("rb") as ciphertext:
             digest = hashlib.file_digest(ciphertext, "sha256").hexdigest()
+            ciphertext.seek(0)
+            # S3 Object Lock uploads require a transport checksum. SHA-256
+            # remains the authoritative downloaded-ciphertext integrity check.
+            content_md5 = base64.b64encode(
+                hashlib.file_digest(
+                    ciphertext, lambda: hashlib.md5(usedforsecurity=False)
+                ).digest()
+            ).decode("ascii")
         key = f"daily/{started:%Y/%m/%d}/{started:%H%M%S}-{uuid.uuid4().hex}.dump.age"
         report("encrypted_upload")
         with encrypted.open("rb") as body:
@@ -210,6 +219,7 @@ def backup(
                 Key=key,
                 Body=body,
                 ContentLength=size,
+                ContentMD5=content_md5,
                 ContentType="application/octet-stream",
                 Metadata={"sha256": digest},
             )
