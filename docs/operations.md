@@ -1,6 +1,6 @@
 # Production Operations Readiness
 
-This runbook records the operational controls required before a KankkuPro pilot. The preview deployment uses native Python on Render, Neon PostgreSQL, and Brevo SMTP. Neon Free six-hour history and an isolated point-in-time branch drill have been verified. External error tracking and scheduled external backup delivery remain unverified. See [encrypted backups](encrypted-backups.md) for the prepared B2 integration and activation gates.
+This runbook records the operational controls required before a KankkuPro pilot. The preview deployment uses native Python on Render, Neon PostgreSQL, and Brevo SMTP. Neon Free six-hour history and an isolated point-in-time branch drill have been verified. CI and the read-only B2 privacy/retention/inventory check passed on 2026-11-27. External error tracking, encrypted upload/restore and scheduled external backup delivery remain unverified. See [encrypted backups](encrypted-backups.md) for the B2 verification evidence and activation gates.
 
 ## Current application controls
 
@@ -91,4 +91,4 @@ SMTP transport/authentication failures return a private 503 recovery page with a
 
 ## Operational gaps
 
-External runtime error-alert routing remains unconfigured. Availability checks and encrypted-backup/restore tooling exist; scheduled B2 delivery remains disabled pending private credentials, key custody and a verified provider-backed restore. Performance objectives also have not been measured against representative tenant data. These are deployment and decision gates, not completed controls. The pilot gate remains blocked until they are configured and verified alongside the commercial workflow.
+External runtime error-alert routing remains unconfigured. Scheduled availability checks have passed, and encrypted-backup/restore tooling exists. B2 credentials passed the read-only storage check; live upload, provider-backed recovery and scheduled backup delivery remain unverified pending transfer approval and independent recovery-key custody. Performance objectives also have not been measured against representative tenant data. These are deployment and decision gates, not completed controls. The pilot gate remains blocked until they are configured and verified alongside the commercial workflow.
