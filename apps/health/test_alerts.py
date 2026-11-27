@@ -150,7 +150,9 @@ class RuntimeAlertTests(SimpleTestCase):
     def test_handled_dependency_503_is_alerted_too(self):
         response = self.client.get("/unavailable/")
         self.assertEqual(response.status_code, 503)
-        self.assertEqual(json.loads(mail.outbox[0].body)["http_status"], 503)
+        event = json.loads(mail.outbox[0].body)
+        self.assertEqual(event["http_status"], 503)
+        self.assertEqual(event["request_id"], response["X-Request-ID"])
 
     @patch(
         "apps.health.alerts.notify_runtime_error", side_effect=RuntimeError("private")

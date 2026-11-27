@@ -19,7 +19,12 @@ _emitting = threading.local()
 
 
 def alert_payload(record):
-    request_id = getattr(record, "request_id", request_id_context.get())
+    # Django can log a handled 5xx after middleware has reset ContextVars.
+    request_id = getattr(
+        getattr(record, "request", None),
+        "request_id",
+        getattr(record, "request_id", request_id_context.get()),
+    )
     request_id = request_id if re.fullmatch(r"[0-9a-f]{32}", str(request_id)) else "-"
     exception_type = record.exc_info[0].__name__ if record.exc_info else "unknown"
     if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,63}", exception_type):

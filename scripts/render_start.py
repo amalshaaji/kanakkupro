@@ -1,9 +1,11 @@
 """Serialized, additive staging release followed by the WSGI process."""
 
+import json
 import os
 import re
 import subprocess
 import sys
+import uuid
 from urllib.parse import parse_qs, urlsplit
 
 import psycopg
@@ -17,20 +19,37 @@ class ReleaseError(RuntimeError):
 
 def command_failure(command, stderr):
     # Extract only known field names/check IDs, never exception text or values.
-    fields = [key for key in (
-        "SECRET_KEY", "ALLOWED_HOSTS", "DATABASE_URL", "EMAIL_BACKEND",
-        "EMAIL_HOST", "EMAIL_USE_TLS", "EMAIL_USE_SSL", "DEFAULT_FROM_EMAIL",
-        "CSRF_TRUSTED_ORIGINS", "MFA_ENCRYPTION_KEYS", "TRUST_X_FORWARDED_PROTO",
-    ) if re.search(r"\b" + key + r"\b", stderr)]
-    checks = sorted(set(re.findall(r"\bsecurity\.[WE]\d{3}\b", stderr)))
+    fields = [
+        key
+        for key in (
+            "SECRET_KEY",
+            "ALLOWED_HOSTS",
+            "DATABASE_URL",
+            "EMAIL_BACKEND",
+            "EMAIL_HOST",
+            "EMAIL_USE_TLS",
+            "EMAIL_USE_SSL",
+            "DEFAULT_FROM_EMAIL",
+            "CSRF_TRUSTED_ORIGINS",
+            "MFA_ENCRYPTION_KEYS",
+            "TRUST_X_FORWARDED_PROTO",
+            "RUNTIME_ALERTS_ENABLED",
+            "RUNTIME_ALERT_EMAILS",
+        )
+        if re.search(r"\b" + key + r"\b", stderr)
+    ]
+    checks = sorted(set(re.findall(r"\b(?:security|health)\.[WE]\d{3}\b", stderr)))
     hints = ", ".join(fields + checks) or "no safe diagnostic available"
     return ReleaseError(f"Release command failed: {command}; inspect {hints}.")
 
 
 def missing_configuration(env):
     required = [
-        "DATABASE_URL", "SECRET_KEY", "MFA_ENCRYPTION_KEYS",
-        "EMAIL_BACKEND", "DEFAULT_FROM_EMAIL",
+        "DATABASE_URL",
+        "SECRET_KEY",
+        "MFA_ENCRYPTION_KEYS",
+        "EMAIL_BACKEND",
+        "DEFAULT_FROM_EMAIL",
     ]
     if env.get("EMAIL_BACKEND") == "django.core.mail.backends.smtp.EmailBackend":
         required.append("EMAIL_HOST")
@@ -89,7 +108,8 @@ def main():
     missing = missing_configuration(os.environ)
     if missing:
         print(
-            "Staging configuration is missing: " + ", ".join(missing)
+            "Staging configuration is missing: "
+            + ", ".join(missing)
             + ". Set these in Render Environment; web server was not started.",
             file=sys.stderr,
         )
@@ -100,13 +120,17 @@ def main():
         print(str(error), file=sys.stderr)
         return 1
     except psycopg.Error:
-        print("Database connection/lock failed; check Neon DATABASE_URL, password, "
-              "hostname (no backslashes), TLS, and database availability.",
-              file=sys.stderr)
+        print(
+            "Database connection/lock failed; check Neon DATABASE_URL, password, "
+            "hostname (no backslashes), TLS, and database availability.",
+            file=sys.stderr,
+        )
         return 1
     except subprocess.TimeoutExpired:
-        print("Release command timed out; inspect database locks and migrations.",
-              file=sys.stderr)
+        print(
+            "Release command timed out; inspect database locks and migrations.",
+            file=sys.stderr,
+        )
         return 1
     except Exception:
         # Driver/child error text may include connection or SMTP details.
@@ -116,6 +140,7 @@ def main():
             file=sys.stderr,
         )
         return 1
+    optional_runtime_probe(dict(os.environ))
     os.execvp(
         sys.executable,
         [
@@ -127,6 +152,49 @@ def main():
             "gunicorn.conf.py",
         ],
     )
+
+
+def optional_runtime_probe(env):
+    """An explicitly requested, audited one-attempt probe cannot block startup."""
+    requested = env.get("RUNTIME_ALERT_PROBE_ID", "").strip()
+    if not requested:
+        return
+    try:
+        probe_id = uuid.UUID(requested)
+        result = subprocess.run(
+            [
+                sys.executable,
+                "manage.py",
+                "send_runtime_alert_test",
+                "--send",
+                "--probe-id",
+                str(probe_id),
+            ],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        data = json.loads(result.stdout)
+        status = data.get("status")
+        if status not in {
+            "provider_accepted",
+            "already_requested",
+            "throttled",
+            "disabled",
+            "unconfigured",
+            "unavailable",
+        }:
+            status = "unavailable"
+        print(
+            json.dumps({"runtime_alert_probe": status, "request_id": probe_id.hex}),
+            flush=True,
+        )
+    except Exception:
+        print(
+            "Runtime alert probe unavailable; application startup continues.",
+            flush=True,
+        )
 
 
 if __name__ == "__main__":

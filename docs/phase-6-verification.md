@@ -38,8 +38,21 @@ notification, without error aggregation or durable retry. It shares the email
 provider's availability. A dead process cannot send email; retain the independent
 availability workflow and verify its failure notifications.
 
-Eleven local tests passed for metadata privacy, real 500/503 handling, concurrent
-rate limiting, cache/transport failure, the operator probe and deployment checks.
+For a platform without interactive shell access, set `RUNTIME_ALERT_PROBE_ID` to a
+new UUID for one explicitly requested release probe. After the normal release
+checks, startup invokes the same command with `--probe-id UUID`. A persistent
+audit claim prevents that ID from attempting mail again across cache expiry and
+process restarts. Probe failure cannot block startup. Remove the variable after
+checking the safe status log and matching inbox message. A retry requires a new
+UUID; provider acceptance alone still does not establish inbox delivery.
+
+Fifteen local tests passed for metadata privacy, real 500/503 request correlation,
+concurrent rate limiting, cache/transport failure, the audited operator probe and
+its nonblocking release boundary, and deployment checks.
+
+The deployed Render service now uses `/health/ready/` as its HTTP health check.
+The configuration restart passed on 2026-11-27; this does not yet release the new
+alert code or establish ongoing failure-notification delivery.
 
 ## Isolated review environment
 
@@ -49,6 +62,9 @@ host/service overrides. Seeding refuses existing users/businesses; it never clea
 an existing database. Use a freshly created disposable database and an ephemeral
 `PILOT_REVIEW_PASSWORD` of at least 16 characters. No staff/superuser is created.
 Email and runtime alerts are disabled in this environment.
+Only this guarded review configuration allows 100 legitimate logins per minute
+from the shared localhost IP for accelerated browser runs. Failed-login limits
+remain active.
 
 ```bash
 # Load the new local review database URL and an ephemeral password privately.
@@ -104,7 +120,9 @@ Manual local browser verification on 2026-11-27 completed an INR 118.00 invoice,
 payments of 50.00 and 68.00, zero outstanding and matching dashboard changes.
 The 390 px mobile view had no page-level horizontal overflow and its menu opened
 from the keyboard. The review found the skip-link target could not take focus;
-the shared main landmark now has `tabindex=-1`, with a browser regression check.
+both application and account main landmarks now have `tabindex=-1`, with a browser
+regression check. Automated findings also identified low-contrast form labels and
+help links; these now use the darker shared text color.
 
 Automated scans do not certify WCAG conformance. Screen-reader semantics, zoom,
 focus order, actual device behavior and content meaning still require review.
