@@ -135,16 +135,18 @@ The existing private recovery identity also decrypted a synthetic local canary
 encrypted to the documented public recipient. No private identity was copied or
 uploaded, and no deployed records were read or changed for these checks.
 
-An independently stored recovery-key copy remains unconfirmed. B2 uploads are
-still disabled; read-only bucket checks are not a completed backup. The required
+The operator explicitly approved the Neon → GitHub Actions → private B2 transfer
+and confirmed a recovery-key copy outside this project on 2026-11-27. Activation
+is awaiting GitHub's fresh email verification. Read-only bucket checks are not a
+completed backup. The required
 encrypted upload, provider-backed restore and scheduled delivery evidence remain
 in [the backup runbook](encrypted-backups.md).
 
 ## Remaining operator gates
 
-- Approve the specific database-backup transfer and confirm independent key custody,
-  then verify upload, recovery and a later scheduled run.
-- Configure the approved operator alert inbox and verify a test event arrives.
+- Complete GitHub access verification, then verify the approved backup upload,
+  recovery and a later scheduled run. Transfer and separate key custody are confirmed.
+- Configure the operator-approved alert inbox and verify a test event arrives.
 - Verify real password-reset/invitation delivery and inbox placement.
 - Verify deployed platform-admin MFA/recovery, credential replacement and least
   privilege for database/operator access.

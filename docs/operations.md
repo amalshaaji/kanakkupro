@@ -7,7 +7,7 @@ This runbook records the operational controls required before a KankkuPro pilot.
 - `GET /health/live/` confirms the web process answers without requiring PostgreSQL.
 - `GET /health/ready/` confirms PostgreSQL can answer `SELECT 1` and the shared authentication cache can be read. Create the database cache table before production logins.
 - Application logs are structured JSON on stdout. Use the response `X-Request-ID` to correlate a request with its application log. Tenant IDs are included as support context; customer payloads and invitation URLs are not.
-- Django production settings enforce HTTPS redirects and secure session/CSRF cookies. HSTS remains disabled until the production domain and TLS path are verified.
+- Django production settings enforce HTTPS redirects and secure session/CSRF cookies. The current Render endpoint returned HSTS with a 3,600-second lifetime and includeSubDomains on 2026-11-27; preload is not enabled.
 
 A ready response tests database/cache connectivity. It does not prove migrations are current, email is working, monitoring alerts are routed, or backups can be restored. Production configuration guards, privileged MFA, encrypted secrets, private response headers, and CI security gates are documented in [Production security](production-security.md).
 

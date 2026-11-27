@@ -24,6 +24,11 @@ MFA encryption keys and application secret recovery custody remain separate requ
 
 ## Activation
 
+The operator approved the specific Neon → GitHub Actions → private B2 transfer
+and confirmed the private recovery key is saved separately on 2026-11-27. Saving
+the activation flag currently requires GitHub's fresh email verification. Until
+the saved flag and a successful backup run are observed, uploads remain unverified.
+
 The workflow `.github/workflows/backup.yml` uses native Python/age/PostgreSQL clients on a GitHub-hosted Ubuntu runner, without Docker. Scheduling is gated by `BACKUPS_ENABLED=true` and the main branch. It runs daily at 02:17 UTC (07:47 Asia/Kolkata), plus a manual dispatch. GitHub schedules are best effort; review failures and freshness. Daily cadence alone is not a guaranteed 24-hour RPO.
 
 1. Review/approve the new backup credential and the transfer of the Neon connection secret to GitHub Actions. Use a bucket-restricted application key, not a master key. A prepared web form selects only this bucket, read/write access and a 90-day expiry. The standard UI preset can include deletion capabilities; compliance retention blocks early deletion and this job never invokes deletion. Prefer a custom API-created key with only `listBuckets`, `readBuckets`, `listFiles`, `readFiles`, `writeFiles`, `readBucketRetentions`, and `readFileRetentions` if an authorized operator can provision it. No all-bucket listing is required. Review renewal before the key expires.
