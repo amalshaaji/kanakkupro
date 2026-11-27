@@ -1,7 +1,27 @@
 # Phase 6 verification
 
-Status: engineering verification is in progress. This document records specific
-evidence and the remaining deployment gates; it does not authorize pilot admission.
+Status: engineering checks passed and the hardening release is deployed. Operational
+gates below remain open; this document does not authorize pilot admission.
+
+## Verified release
+
+[CI run 38](https://github.com/amalshaaji/kanakkupro/actions/runs/46025851685)
+passed all three jobs for commit `22ac7484c0a0328f24d729f72d8f27460daf89b1`:
+
+- 201 backend tests passed. The two opt-in restore tests were skipped in that
+  invocation, then both passed in the dedicated real PostgreSQL/age restore step.
+- Production configuration, migrations, dependency audits and native build passed.
+- Eleven desktop/mobile browser tests passed; the desktop invocation of the
+  mobile-only navigation test was intentionally skipped. All audited owner screens
+  passed the configured automated accessibility rules at both viewport sizes.
+- The isolated single-worker HTTP workload and PDF request passed with unchanged
+  financial totals and a foreign-tenant 404. The synthetic review artifact is
+  retained for seven days on that run.
+
+Render deployment `dep-dc4q7gm1egvs739ebb6g` became live at 15:39:21 UTC on
+2026-11-27. Its `/health/ready/` check passed. A later public readiness check
+returned HTTP 200 in 21.54 seconds after an earlier request timed out at 30 seconds.
+This is not evidence of an acceptable cold-start or production latency SLO.
 
 ## Runtime error alerts
 
@@ -50,9 +70,14 @@ Fifteen local tests passed for metadata privacy, real 500/503 request correlatio
 concurrent rate limiting, cache/transport failure, the audited operator probe and
 its nonblocking release boundary, and deployment checks.
 
-The deployed Render service now uses `/health/ready/` as its HTTP health check.
-The configuration restart passed on 2026-11-27; this does not yet release the new
-alert code or establish ongoing failure-notification delivery.
+The deployed Render service uses `/health/ready/` as its HTTP health check. Runtime
+alerts are enabled for the operator-approved destination. At 15:39:09 UTC on
+2026-11-27 the actual Gmail message matched probe request ID
+`c399c557c0c44af1842730e70150d3e9`; Render logged `provider_accepted` for that same
+ID. Gmail classified it as Spam despite passing SPF, DKIM and DMARC. Transport and
+recipient delivery are proved; reliable operator inbox placement remains open.
+The one-time probe marker was cleared using Render's Save only option for the next
+deployment. Its existing audit claim prevents the running release from repeating it.
 
 ## Isolated review environment
 
@@ -146,7 +171,7 @@ in [the backup runbook](encrypted-backups.md).
 
 - Complete GitHub access verification, then verify the approved backup upload,
   recovery and a later scheduled run. Transfer and separate key custody are confirmed.
-- Configure the operator-approved alert inbox and verify a test event arrives.
+- Resolve alert inbox placement; the approved runtime probe arrived in Gmail Spam.
 - Verify real password-reset/invitation delivery and inbox placement.
 - Verify deployed platform-admin MFA/recovery, credential replacement and least
   privilege for database/operator access.

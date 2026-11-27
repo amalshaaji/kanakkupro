@@ -91,13 +91,15 @@ SMTP transport/authentication failures return a private 503 recovery page with a
 
 ## Operational gaps
 
-Payload-free runtime email alerts are implemented but their operator destination
-and live delivery remain unverified. Scheduled availability checks have passed,
-and encrypted-backup/restore tooling exists. B2 credentials passed the read-only
-storage check; live upload, provider-backed recovery and scheduled backup delivery
-remain unverified pending transfer approval and independent recovery-key custody.
-An isolated two-tenant HTTP workload has been measured; deployed latency/cold-start
-objectives remain unverified. See [Phase 6 verification](phase-6-verification.md).
+The hardening release passed all three CI jobs and is live. Payload-free runtime
+alerts are enabled; the approved probe reached Gmail but was classified as Spam.
+Scheduled availability checks have passed. B2 credentials passed read-only storage
+checks, and the operator approved the specific backup transfer and confirmed
+independent key custody. Activation still requires GitHub email access verification;
+live upload, provider-backed recovery and scheduled backup delivery are unverified.
+Local and CI two-tenant HTTP/PDF workloads passed. Public post-release readiness
+returned 200 in 21.54 seconds after an earlier 30-second timeout; deployed latency
+and cold-start objectives remain open. See [Phase 6 verification](phase-6-verification.md).
 These are deployment and decision gates, not completed controls. The pilot gate
 remains blocked until they are configured and verified alongside the commercial
 workflow.
