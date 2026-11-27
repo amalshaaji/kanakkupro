@@ -13,13 +13,18 @@ async function login(page, email = 'owner-a@pilot.example.test') {
   await expect(page).toHaveURL(/\/dashboard\/$/);
 }
 
-async function audit(page, info, label) {
+async function audit(page, info, label, assertClean = true) {
   const result = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
   await info.attach(`accessibility-${label}`, {
     body: JSON.stringify(result.violations, null, 2), contentType: 'application/json',
   });
-  expect(result.violations, `${label}: automated accessibility violations`).toEqual([]);
+  const findings = result.violations.map(violation => ({
+    page: label, rule: violation.id,
+    nodes: violation.nodes.map(node => ({ target: node.target, issue: node.failureSummary })),
+  }));
+  if (assertClean) expect(findings, `${label}: automated accessibility violations`).toEqual([]);
+  return findings;
 }
 
 test.beforeEach(async ({ page, baseURL }) => {
@@ -45,13 +50,25 @@ test('owner screens have labels, contrast and bounded layouts', async ({ page },
     '/invoices/', '/invoices/new/', '/invoices/settings/', '/reports/financial/',
     '/dashboard/pilot/', '/tenants/team/',
   ];
+  const findings = [];
   for (const path of paths) {
     const response = await page.goto(path);
     expect(response.status()).toBe(200);
     await expect(page.getByRole('main')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
-    await audit(page, info, path.replaceAll('/', '-'));
+    findings.push(...await audit(page, info, path.replaceAll('/', '-'), false));
   }
+  expect(findings, 'Accessibility findings across all owner screens').toEqual([]);
+});
+
+test('login errors remain labelled and readable', async ({ page }, info) => {
+  await page.goto('/accounts/login/');
+  await page.getByRole('textbox', { name: 'Email:', exact: true }).fill('no-such-user@pilot.example.test');
+  await page.getByRole('textbox', { name: 'Password:', exact: true }).fill('Invalid-Review-Password-Only-61!');
+  await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+  await expect(page).toHaveURL(/\/accounts\/login\/$/);
+  await expect(page.locator('.errorlist')).toBeVisible();
+  await audit(page, info, 'login-error');
 });
 
 test('owner issues an invoice, records partial and final payments and downloads PDF', async ({ page }) => {
