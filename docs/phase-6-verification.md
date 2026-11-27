@@ -161,16 +161,17 @@ encrypted to the documented public recipient. No private identity was copied or
 uploaded, and no deployed records were read or changed for these checks.
 
 The operator explicitly approved the Neon → GitHub Actions → private B2 transfer
-and confirmed a recovery-key copy outside this project on 2026-11-27. Activation
-is awaiting GitHub's fresh email verification. Read-only bucket checks are not a
-completed backup. The required
-encrypted upload, provider-backed restore and scheduled delivery evidence remain
-in [the backup runbook](encrypted-backups.md).
+and confirmed a recovery-key copy outside this project on 2026-11-27. The enable
+flag is saved. The [live encrypted upload](https://github.com/amalshaaji/kanakkupro/actions/runs/46057506524)
+passed on 2026-11-28, including version/size, 30-day COMPLIANCE retention and SHA-256
+readback. See [object evidence](evidence/phase6-b2-backup-2026-11-28.json).
+Provider-backed restore and a later scheduled delivery remain open in
+[the backup runbook](encrypted-backups.md).
 
 ## Remaining operator gates
 
-- Complete GitHub access verification, then verify the approved backup upload,
-  recovery and a later scheduled run. Transfer and separate key custody are confirmed.
+- Restore the verified B2 object into an isolated database and prove a later
+  scheduled run. Transfer, separate key custody and manual upload/readback are confirmed.
 - Resolve alert inbox placement; the approved runtime probe arrived in Gmail Spam.
 - Verify real password-reset/invitation delivery and inbox placement.
 - Verify deployed platform-admin MFA/recovery, credential replacement and least

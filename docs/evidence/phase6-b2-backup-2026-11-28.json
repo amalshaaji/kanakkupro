@@ -1,0 +1,20 @@
+{
+  "observed_on": "2026-11-28",
+  "timezone": "Asia/Kolkata",
+  "run_url": "https://github.com/amalshaaji/kanakkupro/actions/runs/46057506524",
+  "run_number": 10,
+  "trigger": "workflow_dispatch",
+  "commit": "9f6dce0",
+  "status": "uploaded_and_verified",
+  "bucket": "kanakkupro-backups-29988154",
+  "key": "daily/2026/11/27/193344-317f76161d934fa1b9c079f413107be0.dump.age",
+  "version": "4_ze800b8bb15131299a12c0518_f105751069c7010dc_d20261127_m193351_c005_v0501037_t0034_u01795808031546",
+  "bytes": 128544,
+  "sha256": "1084d7ce9cff3a9a2b6349e29511f709bb4a287c8683a20dbee0eb1e0a58939b",
+  "retention_days_minimum": 30,
+  "retention_mode": "COMPLIANCE",
+  "readback_sha256_verified": true,
+  "backup_transport_tests_passed": 12,
+  "restore_verified": false,
+  "scheduled_delivery_verified": false
+}

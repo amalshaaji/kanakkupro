@@ -1,6 +1,6 @@
 # Production Operations Readiness
 
-This runbook records the operational controls required before a KankkuPro pilot. The preview deployment uses native Python on Render, Neon PostgreSQL, and Brevo SMTP. Neon Free six-hour history and an isolated point-in-time branch drill have been verified. CI and the read-only B2 privacy/retention/inventory check passed on 2026-11-27. External error tracking, encrypted upload/restore and scheduled external backup delivery remain unverified. See [encrypted backups](encrypted-backups.md) for the B2 verification evidence and activation gates.
+This runbook records the operational controls required before a KankkuPro pilot. The preview deployment uses native Python on Render, Neon PostgreSQL, and Brevo SMTP. Neon Free six-hour history, an isolated point-in-time branch drill and the hardening release checks passed. The runtime alert probe reached Gmail Spam. On 2026-11-28 manual backup run 10 verified encrypted B2 upload, readback and protected retention. Restoring that object and observing a later scheduled backup remain open. See [encrypted backups](encrypted-backups.md) for evidence and the recovery procedure.
 
 ## Current application controls
 
@@ -95,8 +95,9 @@ The hardening release passed all three CI jobs and is live. Payload-free runtime
 alerts are enabled; the approved probe reached Gmail but was classified as Spam.
 Scheduled availability checks have passed. B2 credentials passed read-only storage
 checks, and the operator approved the specific backup transfer and confirmed
-independent key custody. Activation still requires GitHub email access verification;
-live upload, provider-backed recovery and scheduled backup delivery are unverified.
+independent key custody. Backups are enabled, and manual run 10 verified live encrypted upload, version/size,
+SHA-256 readback and 30-day COMPLIANCE retention on 2026-11-28. Provider-backed
+restoration and a later scheduled delivery remain open.
 Local and CI two-tenant HTTP/PDF workloads passed. Public post-release readiness
 returned 200 in 21.54 seconds after an earlier 30-second timeout; deployed latency
 and cold-start objectives remain open. See [Phase 6 verification](phase-6-verification.md).

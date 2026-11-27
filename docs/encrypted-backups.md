@@ -1,6 +1,15 @@
 # Daily encrypted backups to Backblaze B2
 
-Status as of 2026-11-27: implementation and isolated local recovery tests passed. GitHub's `backups` environment contains the three required secrets and public encryption recipient, restricted to `main`. The [read-only B2 check](https://github.com/amalshaaji/kanakkupro/actions/runs/45964392351) passed at 13:46 Asia/Kolkata: privacy, thirty-day compliance retention and versioned inventory were verified, with zero stored bytes. The upload step was skipped. [CI for the runner/diagnostics fix](https://github.com/amalshaaji/kanakkupro/actions/runs/45964313944) passed both checks and native-build jobs, including financial restore tests. The [first manual backup run](https://github.com/amalshaaji/kanakkupro/actions/runs/45876893712) failed with the former generic error; **live uploads, provider-backed recovery and scheduled backup delivery remain unverified**. The operator approved the Neon-to-GitHub-Actions-to-private-B2 transfer and confirmed independent recovery-key custody on 2026-11-27. Activation now awaits GitHub email access verification. This control does not extend Neon's six-hour point-in-time history. It adds independent daily logical copies.
+Status as of 2026-11-28: daily backups are enabled. The [first verified live
+upload](https://github.com/amalshaaji/kanakkupro/actions/runs/46057506524) passed at
+approximately 01:03 Asia/Kolkata. It checked private storage, encrypted upload,
+object version/size, at least thirty days of COMPLIANCE retention, and SHA-256 of
+the ciphertext downloaded back from B2. The object is 128,544 bytes. Its version
+and digest are recorded in [backup evidence](evidence/phase6-b2-backup-2026-11-28.json).
+The operator approved the specific transfer and confirmed independent recovery-key
+custody. **Provider-backed restoration and a later scheduled delivery remain open.**
+This adds independent daily logical copies; it does not extend Neon's six-hour
+point-in-time history.
 
 ## Verified bucket configuration
 
@@ -25,9 +34,9 @@ MFA encryption keys and application secret recovery custody remain separate requ
 ## Activation
 
 The operator approved the specific Neon → GitHub Actions → private B2 transfer
-and confirmed the private recovery key is saved separately on 2026-11-27. Saving
-the activation flag currently requires GitHub's fresh email verification. Until
-the saved flag and a successful backup run are observed, uploads remain unverified.
+and confirmed the private recovery key is saved separately on 2026-11-27.
+`BACKUPS_ENABLED=true` was verified after GitHub access verification. Manual run
+10 passed on 2026-11-28. The next scheduled delivery must be observed separately.
 
 The workflow `.github/workflows/backup.yml` uses native Python/age/PostgreSQL clients on a GitHub-hosted Ubuntu runner, without Docker. Scheduling is gated by `BACKUPS_ENABLED=true` and the main branch. It runs daily at 02:17 UTC (07:47 Asia/Kolkata), plus a manual dispatch. GitHub schedules are best effort; review failures and freshness. Daily cadence alone is not a guaranteed 24-hour RPO.
 
@@ -41,7 +50,16 @@ The workflow `.github/workflows/backup.yml` uses native Python/age/PostgreSQL cl
 
 The job runs pg_dump in a consistent read-only snapshot, checks its archive listing, encrypts locally on the ephemeral runner, uploads only ciphertext, reads it back, and compares SHA-256. Plaintext temporary files have mode 0600 within a private temporary directory and are removed on normal success/failure. No plaintext backup artifact is retained by GitHub. Tool stderr is suppressed in user-visible failures. These checks do not establish successful database restoration.
 
-Both modes now log fixed stage names before operations and include the failed stage in the error message, without printing exception messages, credentials or provider response bodies. For example, `bucket_retention` identifies the Object Lock configuration check, while `database_dump` identifies the PostgreSQL client step. Read the failed stage before changing permissions or protection settings. Nine targeted tests cover storage policy, ciphertext verification, safe diagnostics and the storage-only mode. The latest CI failure was separately traced to `ubuntu-latest` moving to an image without `postgresql-client-16`; both CI jobs now use Ubuntu 24.04, whose package set includes that client.
+Both modes log fixed stage names and allowlisted failure types/provider codes,
+without printing exception messages, credentials or provider response bodies.
+A live upload initially failed with `SSLError`. Removing `Expect: 100-continue`
+through the SDK's before-sign request hook resolved the TLS failure while keeping
+certificate validation enabled. The following `InvalidRequest` rejection was
+resolved by supplying Content-MD5 for the Object Lock upload. The authoritative
+readback integrity check remains SHA-256. Twelve targeted tests cover storage
+policy, ciphertext verification, diagnostic privacy and actual SDK request
+preparation. The backup workflow runs them without production secrets before the
+upload step.
 
 ## Storage budget and free-tier limits
 
@@ -62,6 +80,6 @@ Backblaze advertises the first 10 GB of storage free. This job conservatively st
 4. Run `restore_manifest --all-tenants` on the recovered database, reconcile financial/audit records, and verify tenant isolation, login/MFA, PDF and reports with an isolated application. The backup does not include an independently captured logical manifest because live writes could race a separate manifest; use the dump's consistent snapshot and known business/audit checkpoints for recovery reconciliation.
 5. Record object version, capture/restore timestamps, reconciliation and application results. Measure actual write loss and incident-to-service recovery. Remove local plaintext and dispose of the isolated target only under an authorized cleanup procedure.
 
-Local evidence: six targeted tests passed on 2026-11-26, including real PostgreSQL 18 dump, age encryption/decryption, real pg_restore and equality of the full critical-model manifest after restoring synthetic invoices, credit note, payments, reversal and audit records. The storage client was simulated; B2 network/auth behavior remains unverified until activation. CI repeats encryption recovery with PostgreSQL 16 and age.
+Local evidence: six targeted tests passed on 2026-11-26, including real PostgreSQL 18 dump, age encryption/decryption, real pg_restore and equality of the full critical-model manifest after restoring synthetic invoices, credit note, payments, reversal and audit records. The storage client was simulated; Live B2 upload/readback/retention checks have since passed in run 10; restoration of that actual object is still required. CI repeats encryption recovery with PostgreSQL 16 and age.
 
 Sources: [age](https://github.com/FiloSottile/age), [PostgreSQL Ubuntu packages](https://www.postgresql.org/download/linux/ubuntu/), [Backblaze pricing](https://www.backblaze.com/cloud-storage/pricing), [B2 key capabilities](https://www.backblaze.com/docs/cloud-storage-application-key-capabilities).
