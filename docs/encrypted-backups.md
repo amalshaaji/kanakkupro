@@ -1,6 +1,6 @@
 # Daily encrypted backups to Backblaze B2
 
-Status: implementation and isolated local recovery tests passed; **live uploads and scheduling are not enabled or verified**. This control does not extend Neon's six-hour point-in-time history. It adds independent daily logical copies.
+Status as of 2026-11-27: implementation and isolated local recovery tests passed. GitHub's `backups` environment contains the three required secrets and public encryption recipient, restricted to `main`. The [first manual backup run](https://github.com/amalshaaji/kanakkupro/actions/runs/45876893712) failed with the former generic error; **live uploads, provider-backed recovery and scheduled backup delivery remain unverified**. This control does not extend Neon's six-hour point-in-time history. It adds independent daily logical copies.
 
 ## Verified bucket configuration
 
@@ -31,10 +31,12 @@ The workflow `.github/workflows/backup.yml` uses native Python/age/PostgreSQL cl
    - `BACKUP_DATABASE_URL`: current TLS-protected Neon source URL, ideally a dedicated read-only backup role able to dump all required tables. Never reuse an exposed old password.
    - `B2_KEY_ID` and `B2_APPLICATION_KEY`: the restricted B2 credential pair.
 3. Set `BACKUP_AGE_RECIPIENT` to the public recipient above. Confirm the private recovery identity is separately recoverable, then set repository variable `BACKUPS_ENABLED=true`.
-4. Manually run **Encrypted database backup**. Check success, the B2 object version and its 30-day retention, then perform the isolated restore below. Do not mark the backup release gate complete from an upload alone.
+4. Manually run **Encrypted database backup**, initially choosing `storage-check`. This read-only mode checks bucket privacy, compliance retention and versioned storage usage with the existing B2 credentials. It receives no database URL, does not dump or upload data, and can run while `BACKUPS_ENABLED` is false. After that succeeds and key custody is confirmed, choose `backup`. Check success, the B2 object version and its 30-day retention, then perform the isolated restore below. Do not mark the backup release gate complete from an upload alone.
 5. Prove a later scheduled run and failure notification. Review account usage/caps and the key expiry. Repository write access can alter code that receives backup secrets: protect main and workflow changes, limit Actions/environment access, and review collaborators.
 
 The job runs pg_dump in a consistent read-only snapshot, checks its archive listing, encrypts locally on the ephemeral runner, uploads only ciphertext, reads it back, and compares SHA-256. Plaintext temporary files have mode 0600 within a private temporary directory and are removed on normal success/failure. No plaintext backup artifact is retained by GitHub. Tool stderr is suppressed in user-visible failures. These checks do not establish successful database restoration.
+
+Both modes now log fixed stage names before operations and include the failed stage in the error message, without printing exception messages, credentials or provider response bodies. For example, `bucket_retention` identifies the Object Lock configuration check, while `database_dump` identifies the PostgreSQL client step. Read the failed stage before changing permissions or protection settings. Nine targeted tests cover storage policy, ciphertext verification, safe diagnostics and the storage-only mode. The latest CI failure was separately traced to `ubuntu-latest` moving to an image without `postgresql-client-16`; both CI jobs now use Ubuntu 24.04, whose package set includes that client.
 
 ## Storage budget and free-tier limits
 

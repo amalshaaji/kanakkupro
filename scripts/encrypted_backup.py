@@ -44,12 +44,14 @@ def validate_source(url, *, allow_local=False):
         raise ValueError("An explicit database host and name are required.")
 
 
-def check_storage(storage):
+def check_storage(storage, *, report=lambda stage: None):
     # B2 exposes private/allPrivate through its S3 bucket ACL API.
+    report("bucket_privacy")
     acl = storage.get_bucket_acl(Bucket=BUCKET)
     for grant in acl.get("Grants", []):
         if grant.get("Grantee", {}).get("Type") == "Group":
             raise ValueError("Backup bucket must be private.")
+    report("bucket_retention")
     config = storage.get_object_lock_configuration(Bucket=BUCKET)
     lock = config.get("ObjectLockConfiguration", {})
     default = lock.get("Rule", {}).get("DefaultRetention", {})
@@ -60,6 +62,7 @@ def check_storage(storage):
     ):
         raise ValueError("Thirty-day compliance retention is required.")
     # Include noncurrent versions: they consume storage too. Never delete backups.
+    report("bucket_inventory")
     total = 0
     for page in storage.get_paginator("list_object_versions").paginate(Bucket=BUCKET):
         total += sum(item["Size"] for item in page.get("Versions", []))
@@ -68,13 +71,23 @@ def check_storage(storage):
     return total
 
 
-def backup(env, storage, *, pg_bin="", age_bin="age", allow_local=False):
+def backup(
+    env,
+    storage,
+    *,
+    pg_bin="",
+    age_bin="age",
+    allow_local=False,
+    report=lambda stage: None,
+):
+    report("source_configuration")
     url = env.get("BACKUP_DATABASE_URL", "")
     validate_source(url, allow_local=allow_local)
+    report("recipient_configuration")
     recipient = env.get("BACKUP_AGE_RECIPIENT", "")
     if not re.fullmatch(r"age1[0-9a-z]{58}", recipient):
         raise ValueError("A native age public recipient is required.")
-    used = check_storage(storage)
+    used = check_storage(storage, report=report)
     pg_dump = str(Path(pg_bin) / "pg_dump") if pg_bin else "pg_dump"
     pg_restore = str(Path(pg_bin) / "pg_restore") if pg_bin else "pg_restore"
     # Do not give database clients bucket credentials, or age database credentials.
@@ -85,6 +98,7 @@ def backup(env, storage, *, pg_bin="", age_bin="age", allow_local=False):
         encrypted = Path(folder) / "database.dump.age"
         # Pre-create with private permissions before pg_dump opens the file.
         plain.touch(mode=0o600)
+        report("database_dump")
         command(
             [
                 pg_dump,
@@ -96,8 +110,10 @@ def backup(env, storage, *, pg_bin="", age_bin="age", allow_local=False):
             ],
             client_env(url, minimal),
         )
+        report("archive_validation")
         command([pg_restore, "--list", str(plain)], minimal)
         encrypted.touch(mode=0o600)
+        report("encryption")
         command(
             [
                 age_bin,
@@ -110,12 +126,14 @@ def backup(env, storage, *, pg_bin="", age_bin="age", allow_local=False):
             ],
             minimal,
         )
+        report("storage_budget")
         size = encrypted.stat().st_size
         if size <= 0 or size > MAX_FILE_BYTES or used + size > MAX_BUCKET_BYTES:
             raise ValueError("Backup size exceeds the conservative storage budget.")
         with encrypted.open("rb") as ciphertext:
             digest = hashlib.file_digest(ciphertext, "sha256").hexdigest()
         key = f"daily/{started:%Y/%m/%d}/{started:%H%M%S}-{uuid.uuid4().hex}.dump.age"
+        report("encrypted_upload")
         with encrypted.open("rb") as body:
             result = storage.put_object(
                 Bucket=BUCKET,
@@ -125,12 +143,15 @@ def backup(env, storage, *, pg_bin="", age_bin="age", allow_local=False):
                 ContentType="application/octet-stream",
                 Metadata={"sha256": digest},
             )
+        report("uploaded_version")
         version = result.get("VersionId")
         if not version:
             raise RuntimeError("Uploaded object version could not be verified.")
+        report("uploaded_size")
         headers = storage.head_object(Bucket=BUCKET, Key=key, VersionId=version)
         if headers.get("ContentLength") != size:
             raise RuntimeError("Uploaded object size mismatch.")
+        report("uploaded_retention")
         retention = storage.get_object_retention(
             Bucket=BUCKET, Key=key, VersionId=version
         ).get("Retention", {})
@@ -142,6 +163,7 @@ def backup(env, storage, *, pg_bin="", age_bin="age", allow_local=False):
         ):
             raise RuntimeError("Uploaded object retention could not be verified.")
         # Read the stored ciphertext back; an ETag alone is not a SHA-256 check.
+        report("download_verification")
         response = storage.get_object(Bucket=BUCKET, Key=key, VersionId=version)
         remote = hashlib.sha256()
         stream = response["Body"]
@@ -166,7 +188,19 @@ def backup(env, storage, *, pg_bin="", age_bin="age", allow_local=False):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pg-bin", default="")
+    parser.add_argument(
+        "--check-storage",
+        action="store_true",
+        help="Check bucket access, retention and budget without a database dump.",
+    )
     args = parser.parse_args()
+    stage = "storage_client"
+
+    def report_stage(value):
+        nonlocal stage
+        stage = value
+        print(json.dumps({"stage": stage}), flush=True)
+
     try:
         import boto3
         from botocore.config import Config
@@ -183,11 +217,19 @@ def main():
                 response_checksum_validation="when_required",
             ),
         )
-        print(json.dumps(backup(dict(os.environ), storage, pg_bin=args.pg_bin)))
+        if args.check_storage:
+            used = check_storage(storage, report=report_stage)
+            result = {"status": "storage_verified", "used_bytes": used}
+        else:
+            result = backup(
+                dict(os.environ), storage, pg_bin=args.pg_bin, report=report_stage
+            )
+        print(json.dumps(result))
     except Exception:
         print(
-            "Encrypted backup failed. Check private configuration, retention, "
-            "storage budget and client versions. No provider details printed.",
+            f"Encrypted backup failed at stage: {stage}. "
+            "Check private configuration, retention, storage budget and client "
+            "versions. No provider details printed.",
             file=sys.stderr,
         )
         return 1

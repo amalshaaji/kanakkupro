@@ -4,7 +4,13 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from scripts.encrypted_backup import BUCKET, MAX_BUCKET_BYTES, backup, check_storage
+from scripts.encrypted_backup import (
+    BUCKET,
+    MAX_BUCKET_BYTES,
+    backup,
+    check_storage,
+    main,
+)
 
 
 def storage_client():
@@ -113,4 +119,72 @@ def test_failed_encryption_never_uploads():
     with patch("scripts.encrypted_backup.command", side_effect=RuntimeError):
         with pytest.raises(RuntimeError):
             backup(env, client)
+    client.put_object.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("operation", "stage"),
+    [
+        ("get_bucket_acl", "bucket_privacy"),
+        ("get_object_lock_configuration", "bucket_retention"),
+        ("get_paginator", "bucket_inventory"),
+    ],
+)
+def test_storage_failure_reports_stage_before_dump_or_upload(operation, stage):
+    client = storage_client()
+    getattr(client, operation).side_effect = RuntimeError("private provider detail")
+    stages = []
+    with patch("scripts.encrypted_backup.command") as tool:
+        with pytest.raises(RuntimeError):
+            backup(
+                {
+                    "BACKUP_DATABASE_URL": "postgresql://u@db/d?sslmode=require",
+                    "BACKUP_AGE_RECIPIENT": "age1" + "q" * 58,
+                },
+                client,
+                report=stages.append,
+            )
+    assert stages[-1] == stage
+    tool.assert_not_called()
+    client.put_object.assert_not_called()
+
+
+def test_cli_reports_failed_stage_without_provider_details(capsys):
+    def failed_backup(env, storage, *, report, **kwargs):
+        report("bucket_retention")
+        raise RuntimeError("private-provider-response secret-database-password")
+
+    with (
+        patch.dict(
+            "sys.modules",
+            {"boto3": MagicMock(), "botocore.config": MagicMock()},
+        ),
+        patch("sys.argv", ["encrypted_backup"]),
+        patch("scripts.encrypted_backup.backup", side_effect=failed_backup),
+    ):
+        assert main() == 1
+    output = capsys.readouterr()
+    assert '"stage": "bucket_retention"' in output.out
+    assert "failed at stage: bucket_retention" in output.err
+    assert "private-provider-response" not in output.out + output.err
+    assert "secret-database-password" not in output.out + output.err
+
+
+def test_cli_storage_check_needs_no_database_secret_and_never_uploads(capsys):
+    client = storage_client()
+    boto3 = MagicMock()
+    boto3.client.return_value = client
+    with (
+        patch.dict("os.environ", {}, clear=True),
+        patch.dict("sys.modules", {"boto3": boto3, "botocore.config": MagicMock()}),
+        patch("sys.argv", ["encrypted_backup", "--check-storage"]),
+        patch("scripts.encrypted_backup.backup") as dump,
+        patch("scripts.encrypted_backup.command") as tool,
+    ):
+        assert main() == 0
+    output = capsys.readouterr()
+    assert '"status": "storage_verified"' in output.out
+    assert not output.err
+    dump.assert_not_called()
+    tool.assert_not_called()
     client.put_object.assert_not_called()

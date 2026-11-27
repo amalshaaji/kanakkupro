@@ -1,6 +1,14 @@
 name: Encrypted database backup
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Storage check reads bucket protection and usage; backup uploads an encrypted dump
+        type: choice
+        default: storage-check
+        options:
+          - storage-check
+          - backup
   schedule:
     - cron: '17 2 * * *'
 permissions:
@@ -10,7 +18,10 @@ concurrency:
   cancel-in-progress: false
 jobs:
   backup:
-    if: github.ref == 'refs/heads/main' && vars.BACKUPS_ENABLED == 'true'
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (vars.BACKUPS_ENABLED == 'true' ||
+      (github.event_name == 'workflow_dispatch' && inputs.mode == 'storage-check'))
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: backups
@@ -30,6 +41,7 @@ jobs:
           sudo apt-get install -y postgresql-client-18
           python -m pip install 'psycopg[binary]>=3.2,<4' 'boto3>=1.42,<2'
       - name: Encrypt and upload backup
+        if: github.event_name != 'workflow_dispatch' || inputs.mode != 'storage-check'
         env:
           BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
           BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
@@ -37,3 +49,10 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_APPLICATION_KEY }}
           AWS_EC2_METADATA_DISABLED: 'true'
         run: python -m scripts.encrypted_backup --pg-bin /usr/lib/postgresql/18/bin
+      - name: Check storage access and retention
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'storage-check'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.B2_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+          AWS_EC2_METADATA_DISABLED: 'true'
+        run: python -m scripts.encrypted_backup --check-storage
