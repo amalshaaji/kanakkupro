@@ -174,6 +174,8 @@ restores only into an empty local drill database, checks migrations and generate
 the financial/audit manifest with mail disabled. The full financial fixture
 manifest matched after actual age decryption and restoration. The live B2 object
 has not yet been downloaded for this verifier; its recovery gate remains open.
+[CI for the restore verifier](https://github.com/amalshaaji/kanakkupro/actions/runs/46059228932)
+passed backend checks, native build and desktop/mobile review for commit `7fc25da`.
 
 ## Remaining operator gates
 
