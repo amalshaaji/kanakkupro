@@ -10,6 +10,7 @@ from scripts.encrypted_backup import (
     backup,
     check_storage,
     main,
+    safe_provider_failure,
 )
 
 
@@ -188,3 +189,26 @@ def test_cli_storage_check_needs_no_database_secret_and_never_uploads(capsys):
     dump.assert_not_called()
     tool.assert_not_called()
     client.put_object.assert_not_called()
+
+
+def test_provider_failure_exposes_only_allowlisted_code_and_http_status():
+    error = RuntimeError("private-provider-response secret-database-password")
+    error.response = {
+        "Error": {"Code": "AccessDenied", "Message": "private-provider-response"},
+        "ResponseMetadata": {"HTTPStatusCode": 403, "private": "secret"},
+    }
+    assert safe_provider_failure(error) == {
+        "provider_code": "AccessDenied",
+        "http_status": 403,
+    }
+    error.response["Error"]["Code"] = "secret-database-password"
+    error.response["ResponseMetadata"]["HTTPStatusCode"] = "private-secret"
+    assert safe_provider_failure(error) == {
+        "provider_code": "unknown",
+        "http_status": None,
+    }
+    error.response = None
+    assert safe_provider_failure(error) == {
+        "provider_code": "unknown",
+        "http_status": None,
+    }

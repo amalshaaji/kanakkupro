@@ -21,6 +21,40 @@ BUCKET = "kanakkupro-backups-29988154"
 ENDPOINT = "https://s3.us-east-005.backblazeb2.com"
 MAX_FILE_BYTES = 25 * 1024 * 1024
 MAX_BUCKET_BYTES = 1024 * 1024 * 1024
+SAFE_PROVIDER_CODES = frozenset(
+    {
+        "AccessDenied",
+        "BadDigest",
+        "ExpiredToken",
+        "InvalidAccessKeyId",
+        "InvalidArgument",
+        "InvalidDigest",
+        "InvalidRequest",
+        "InvalidToken",
+        "NotImplemented",
+        "RequestTimeout",
+        "ServiceUnavailable",
+        "SignatureDoesNotMatch",
+        "SlowDown",
+    }
+)
+
+
+def safe_provider_failure(error):
+    """Return fixed error codes and status only, never provider response text."""
+    response = getattr(error, "response", None)
+    if not isinstance(response, dict):
+        return {"provider_code": "unknown", "http_status": None}
+    detail = response.get("Error")
+    code = detail.get("Code") if isinstance(detail, dict) else None
+    metadata = response.get("ResponseMetadata")
+    status = metadata.get("HTTPStatusCode") if isinstance(metadata, dict) else None
+    return {
+        "provider_code": (
+            code if isinstance(code, str) and code in SAFE_PROVIDER_CODES else "unknown"
+        ),
+        "http_status": status if type(status) is int and 400 <= status <= 599 else None,
+    }
 
 
 def command(args, env, *, stdout=subprocess.DEVNULL):
@@ -225,7 +259,8 @@ def main():
                 dict(os.environ), storage, pg_bin=args.pg_bin, report=report_stage
             )
         print(json.dumps(result))
-    except Exception:
+    except Exception as error:
+        print(json.dumps(safe_provider_failure(error)), file=sys.stderr)
         print(
             f"Encrypted backup failed at stage: {stage}. "
             "Check private configuration, retention, storage budget and client "
