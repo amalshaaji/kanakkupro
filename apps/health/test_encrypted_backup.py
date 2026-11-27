@@ -1,6 +1,7 @@
 import io
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -10,6 +11,7 @@ from scripts.encrypted_backup import (
     backup,
     check_storage,
     main,
+    omit_upload_continue,
     safe_provider_failure,
 )
 
@@ -80,6 +82,7 @@ def test_backup_uploads_only_ciphertext_and_checks_download_and_retention():
     def upload(**kwargs):
         assert kwargs["Bucket"] == BUCKET
         assert kwargs["Body"].read() == encrypted
+        assert kwargs["ContentLength"] == len(encrypted)
         return {"VersionId": "synthetic-version"}
 
     client.put_object.side_effect = upload
@@ -121,6 +124,59 @@ def test_failed_encryption_never_uploads():
         with pytest.raises(RuntimeError):
             backup(env, client)
     client.put_object.assert_not_called()
+
+
+def test_upload_hook_preserves_payload_integrity_headers():
+    request = SimpleNamespace(
+        headers={
+            "Expect": "100-continue",
+            "Content-Length": "9",
+            "Content-MD5": "synthetic-digest",
+            "x-amz-content-sha256": "synthetic-hash",
+        }
+    )
+    omit_upload_continue(request)
+    assert request.headers == {
+        "Content-Length": "9",
+        "Content-MD5": "synthetic-digest",
+        "x-amz-content-sha256": "synthetic-hash",
+    }
+    omit_upload_continue(request)
+
+
+def test_actual_backup_sdk_omits_continue_before_network():
+    boto3 = pytest.importorskip("boto3", reason="SDK is installed by backup workflow")
+    from botocore.config import Config
+
+    class Prepared(Exception):
+        pass
+
+    client = boto3.client(
+        "s3",
+        endpoint_url="https://s3.us-east-005.backblazeb2.com",
+        region_name="us-east-005",
+        aws_access_key_id="synthetic-only",
+        aws_secret_access_key="synthetic-only",
+        verify=True,
+        config=Config(request_checksum_calculation="when_required"),
+    )
+    client.meta.events.register("before-sign.s3.PutObject", omit_upload_continue)
+
+    def intercept(request, **kwargs):
+        assert request.url.startswith("https://s3.us-east-005.backblazeb2.com/")
+        assert "Expect" not in request.headers
+        assert int(request.headers["Content-Length"]) == 9
+        assert request.body.read() == b"synthetic"
+        raise Prepared()
+
+    client.meta.events.register("before-send.s3.PutObject", intercept)
+    with pytest.raises(Prepared):
+        client.put_object(
+            Bucket=BUCKET,
+            Key="never-uploaded",
+            Body=io.BytesIO(b"synthetic"),
+            ContentLength=9,
+        )
 
 
 @pytest.mark.parametrize(
@@ -186,6 +242,9 @@ def test_cli_storage_check_needs_no_database_secret_and_never_uploads(capsys):
     output = capsys.readouterr()
     assert '"status": "storage_verified"' in output.out
     assert not output.err
+    client.meta.events.register.assert_called_once_with(
+        "before-sign.s3.PutObject", omit_upload_continue
+    )
     dump.assert_not_called()
     tool.assert_not_called()
     client.put_object.assert_not_called()

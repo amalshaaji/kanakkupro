@@ -39,7 +39,9 @@ jobs:
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get update
           sudo apt-get install -y postgresql-client-18
-          python -m pip install 'psycopg[binary]>=3.2,<4' 'boto3>=1.42,<2'
+          python -m pip install 'psycopg[binary]>=3.2,<4' 'boto3>=1.42,<2' 'pytest==9.2.0'
+      - name: Verify backup upload transport without network
+        run: python -m pytest -c /dev/null apps/health/test_encrypted_backup.py -q
       - name: Encrypt and upload backup
         if: github.event_name != 'workflow_dispatch' || inputs.mode != 'storage-check'
         env:

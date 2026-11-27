@@ -87,6 +87,12 @@ def safe_provider_failure(error):
     }
 
 
+def omit_upload_continue(request, **kwargs):
+    """Avoid interim-response stalls; run before signing, without changing TLS."""
+    if "Expect" in request.headers:
+        del request.headers["Expect"]
+
+
 def command(args, env, *, stdout=subprocess.DEVNULL):
     result = subprocess.run(
         args, env=env, stdout=stdout, stderr=subprocess.PIPE, timeout=600
@@ -281,6 +287,7 @@ def main():
                 response_checksum_validation="when_required",
             ),
         )
+        storage.meta.events.register("before-sign.s3.PutObject", omit_upload_continue)
         if args.check_storage:
             used = check_storage(storage, report=report_stage)
             result = {"status": "storage_verified", "used_bytes": used}
