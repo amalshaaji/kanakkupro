@@ -221,6 +221,13 @@ not prove B2's current accessibility or restoration, and the shared GitHub
 scheduler can delay/drop either workflow. Independent monitoring and actual
 failure-notification delivery remain operator gates.
 
+The [first live monitor run](https://github.com/amalshaaji/kanakkupro/actions/runs/46125877791)
+passed both readiness and backup freshness on 2026-11-28. The
+[CI run for commit `f339c5c`](https://github.com/amalshaaji/kanakkupro/actions/runs/46125877774)
+passed backend checks, native build and desktop/mobile review. This is a
+push-triggered monitor result; no successful scheduled backup or fresh
+missing-backup alert email was observed by this check.
+
 ## Remaining operator gates
 
 - Verify full provider recovery with `pg_session_jwt` available, and prove a later
