@@ -1,6 +1,6 @@
 # Production Operations Readiness
 
-This runbook records the operational controls required before a KankkuPro pilot. The preview deployment uses native Python on Render, Neon PostgreSQL, and Brevo SMTP. Neon Free six-hour history, an isolated point-in-time branch drill and the hardening release checks passed. The runtime alert probe reached Gmail Spam. On 2026-11-28 manual backup run 10 verified encrypted B2 upload, readback and protected retention. Application recovery of that exact object passed with the unused Neon JWT extension explicitly omitted. Full provider recovery and a later scheduled backup remain open. See [encrypted backups](encrypted-backups.md) for evidence and the recovery procedure.
+This runbook records the operational controls required before a KankkuPro pilot. The preview deployment uses native Python on Render, Neon PostgreSQL, and Brevo SMTP. Neon Free six-hour history, an isolated point-in-time branch drill and the hardening release checks passed. The runtime alert probe reached Gmail Spam. On 2026-11-28 manual backup run 10 verified encrypted B2 upload, readback and protected retention. That exact object now passes strict local logical-archive recovery including the Neon JWT extension, with no omissions. End-to-end provider/service recovery and a later scheduled backup remain open. See [encrypted backups](encrypted-backups.md) for evidence and the recovery procedure.
 
 ## Current application controls
 
@@ -50,7 +50,7 @@ A production owner must complete and record this drill after selecting the datab
 5. Verify schema migration state and reconcile tenant, customer, invoice, and payment totals when those financial modules are implemented.
 6. Remove the isolated restored database and record who performed and reviewed the drill.
 
-Do not put production connection strings, credentials, or customer exports in this repository or in CI logs. The enabled daily encrypted B2 workflow and explicitly limited application recovery are documented in [encrypted backups](encrypted-backups.md); full provider recovery and successful scheduled delivery remain required.
+Do not put production connection strings, credentials, or customer exports in this repository or in CI logs. The enabled daily encrypted B2 workflow and strict local logical-archive recovery are documented in [encrypted backups](encrypted-backups.md); end-to-end provider/service recovery and successful scheduled delivery remain required.
 
 ## Incident response
 
@@ -115,8 +115,8 @@ Scheduled availability checks have passed. B2 credentials passed read-only stora
 checks, and the operator approved the specific backup transfer and confirmed
 independent key custody. Backups are enabled, and manual run 10 verified live encrypted upload, version/size,
 SHA-256 readback and 30-day COMPLIANCE retention on 2026-11-28. The exact object
-passed isolated application recovery with the unused Neon JWT extension omitted;
-full provider recovery and a later scheduled delivery remain open.
+passed strict local logical-archive recovery including the Neon JWT extension;
+end-to-end provider/service recovery and a later scheduled delivery remain open.
 Local and CI two-tenant HTTP/PDF workloads passed. Public post-release readiness
 returned 200 in 21.54 seconds after an earlier 30-second timeout; deployed latency
 and cold-start objectives remain open. See [Phase 6 verification](phase-6-verification.md).

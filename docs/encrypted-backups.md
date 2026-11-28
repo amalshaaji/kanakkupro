@@ -7,9 +7,10 @@ object version/size, at least thirty days of COMPLIANCE retention, and SHA-256 o
 the ciphertext downloaded back from B2. The object is 128,544 bytes. Its version
 and digest are recorded in [backup evidence](evidence/phase6-b2-backup-2026-11-28.json).
 The operator approved the specific transfer and confirmed independent recovery-key
-custody. Application restoration of that exact downloaded object passed locally
-with the unused Neon JWT extension explicitly omitted. **Full provider recovery
-and a later scheduled delivery remain open.**
+custody. The exact downloaded object now passes a strict local restore of its
+complete logical archive, including the genuine Neon JWT extension. No archive
+entries were omitted. **End-to-end provider/service recovery and a later scheduled
+delivery remain open.**
 This adds independent daily logical copies; it does not extend Neon's six-hour
 point-in-time history.
 
@@ -129,17 +130,28 @@ source equality or financial reconciliation. Complete the business checks below.
 Twenty-two local tests passed on 2026-11-28, including the actual encrypted financial
 dump/restore with an equal full manifest, hostile target/connection overrides,
 wrong digests, file substitution, target races and failure cleanup. Those tests use
-synthetic records. The exact live B2 object also passed isolated application
-recovery on 2026-11-28 at 13:42:49 Asia/Kolkata with the extension exception above.
-All 44 migrations and ten financial/audit guard triggers were present. Eighteen
-critical models were read; the financial tables were empty. The read-only tenant
-summary returned zero balances. The 0.927-second local restore excludes download,
-operator access and service recovery, and does not establish end-to-end RPO/RTO.
-No independent same-snapshot manifest was available for source equality. Full
-provider recovery, login/MFA, multi-tenant recovery and nonempty live financial
-reconciliation remain unverified. Safe counts and limitations are recorded in
-[the object evidence](evidence/phase6-b2-backup-2026-11-28.json); the private local
-target is retained for authorized inspection/cleanup.
+synthetic records. The exact live B2 object first passed isolated application
+recovery with the extension exception on 2026-11-28 at 13:42:49 Asia/Kolkata.
+At 14:15:38 it then passed the default strict verifier on a separate empty target
+with genuine `pg_session_jwt` 0.5.0 installed: `full_archive_restored: true` and
+no omissions. All 18 critical-model digests and 44 applied migrations matched the
+earlier restore of the same ciphertext. Ten financial/audit guard triggers were
+enabled, public constraints were validated, checked tenant relationships held
+and the read-only empty-ledger summary returned zero balances. Synthetic-key
+signature acceptance, wrong-key rejection and expiry rejection passed without
+changing the application manifest or persisting test keys.
+
+The strict local restore took 0.922 seconds, excluding download, extension/tool
+preparation, operator access and service recovery. This is not an end-to-end
+RPO/RTO measurement. No independent source manifest was available. Neon
+infrastructure, source ownership/ACLs, application/MFA secrets, provider JWT keys,
+deployed login, multi-tenant service recovery and nonempty live financial
+reconciliation remain unverified. In the [object evidence](evidence/phase6-b2-backup-2026-11-28.json),
+`restore_verified: true` denotes this strict local logical restore;
+`provider_service_recovery_verified: false` preserves the separate service gate.
+The earlier partial result is retained under `application_restore`. Both private
+targets are retained for authorized inspection/cleanup, with their servers
+stopped. See [strict restore details](phase-6-verification.md#strict-archive-restore-including-the-neon-extension).
 
 1. Download a specific encrypted object version from the private bucket to a trusted recovery host. Verify its SHA-256 against the successful job's reported value. Keep download credentials private.
 2. With age installed, decrypt using the separately held private identity. Use a private scratch directory and `umask 077`. For example, with local file paths only:
@@ -154,6 +166,6 @@ target is retained for authorized inspection/cleanup.
 4. Run `restore_manifest --all-tenants` on the recovered database, reconcile financial/audit records, and verify tenant isolation, login/MFA, PDF and reports with an isolated application. The backup does not include an independently captured logical manifest because live writes could race a separate manifest; use the dump's consistent snapshot and known business/audit checkpoints for recovery reconciliation.
 5. Record object version, capture/restore timestamps, reconciliation and application results. Measure actual write loss and incident-to-service recovery. Remove local plaintext and dispose of the isolated target only under an authorized cleanup procedure.
 
-Local evidence: six targeted tests passed on 2026-11-26, including real PostgreSQL 18 dump, age encryption/decryption, real pg_restore and equality of the full critical-model manifest after restoring synthetic invoices, credit note, payments, reversal and audit records. The storage client was simulated. Live B2 upload/readback/retention and the explicitly limited application recovery described above have since passed. CI repeats encryption recovery with PostgreSQL 16 and age.
+Local evidence: six targeted tests passed on 2026-11-26, including real PostgreSQL 18 dump, age encryption/decryption, real pg_restore and equality of the full critical-model manifest after restoring synthetic invoices, credit note, payments, reversal and audit records. The storage client was simulated. Live B2 upload/readback/retention, application recovery and the strict complete logical-archive restore described above have since passed. CI repeats encryption recovery with PostgreSQL 16 and age.
 
 Sources: [age](https://github.com/FiloSottile/age), [PostgreSQL Ubuntu packages](https://www.postgresql.org/download/linux/ubuntu/), [Backblaze pricing](https://www.backblaze.com/cloud-storage/pricing), [B2 key capabilities](https://www.backblaze.com/docs/cloud-storage-application-key-capabilities).

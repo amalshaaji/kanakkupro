@@ -165,9 +165,10 @@ and confirmed a recovery-key copy outside this project on 2026-11-27. The enable
 flag is saved. The [live encrypted upload](https://github.com/amalshaaji/kanakkupro/actions/runs/46057506524)
 passed on 2026-11-28, including version/size, 30-day COMPLIANCE retention and SHA-256
 readback. See [object evidence](evidence/phase6-b2-backup-2026-11-28.json).
-Application recovery of that exact B2 object is now verified with the explicit
-provider-extension exception below. Full provider recovery and a later scheduled
-delivery remain open in [the backup runbook](encrypted-backups.md).
+Both application recovery with an extension exception and a later strict local
+restore of the complete logical archive are verified below. Scheduled delivery
+and end-to-end provider/service recovery remain open in
+[the backup runbook](encrypted-backups.md).
 
 On 2026-11-28 the isolated encrypted-file restore verifier passed sixteen safeguard
 tests and both real PostgreSQL recovery tests. It verifies the downloaded digest,
@@ -202,6 +203,38 @@ passed backend checks, native build and desktop/mobile review for commit `e8ffd3
 The private restored database is retained for authorized inspection/cleanup; the
 local server is stopped and the read-only tool image is unmounted.
 
+### Strict archive restore including the Neon extension
+
+On 2026-11-28 at 14:15:38 Asia/Kolkata, the exact run-10 ciphertext passed the
+default strict verifier into another new, empty localhost database. There was no
+extension omission or archive selection. The result is `restored_and_verified`,
+`full_archive_restored: true`, `omitted_extensions: []`, with plaintext scratch
+removed. The verifier/decrypt/restore/migration/manifest stage took 0.922 seconds;
+this excludes download, toolchain/extension preparation and service recovery.
+
+The genuine `pg_session_jwt` 0.5.0 extension was built from
+[Neon source commit `937a79a`](https://github.com/neondatabase/pg_session_jwt/tree/937a79a65e596d916295d078b3a82ab421291665)
+using pgrx 0.16.1 and Rust 1.91.1 for a private PostgreSQL 18.7 copy. Source,
+versions, build adjustment and artifact digests are recorded in the object
+evidence. Temporary toolchain paths were explicit; the user's home-directory
+state was restored after an initial installer path correction.
+
+All 18 critical-model digests and all 44 applied migrations matched the earlier
+application restore of the same ciphertext. Read-only checks passed the ten
+financial/audit guards, public constraint validation, checked tenant relationships
+and zero-balance summary. The restored extension accepted a synthetic signature
+and rejected wrong-key and expired tokens; test keys lived only in memory. A
+second manifest confirmed these checks did not change application records. Mail
+was disabled. The private database remains for inspection, its server is stopped,
+and the source tool image is unmounted.
+
+This closes strict local logical-archive restoration, including the previously
+unavailable extension. It does not recover Neon's infrastructure, source
+ownership/ACLs, application/MFA secrets or service routing. Provider JWT keys and
+deployed login/MFA were not tested. The backup's financial tables remain empty,
+and the same-ciphertext comparison is not an independent source checkpoint.
+End-to-end RPO/RTO and populated live financial reconciliation remain open.
+
 ## Backup freshness monitoring
 
 On 2026-11-28 a read-only check of actual GitHub metadata identified manual run
@@ -230,8 +263,8 @@ missing-backup alert email was observed by this check.
 
 ## Remaining operator gates
 
-- Verify full provider recovery with `pg_session_jwt` available, and prove a later
-  scheduled run. The exact B2 object's isolated application restore is verified.
+- Prove a later scheduled backup and end-to-end provider/service recovery.
+  The exact B2 object's strict local logical restore now includes `pg_session_jwt`.
   The 2026-11-28 schedule check still showed only the earlier skipped scheduled run;
   successful scheduled delivery remains unobserved.
 - Resolve alert inbox placement; the approved runtime probe arrived in Gmail Spam.

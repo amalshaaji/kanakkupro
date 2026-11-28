@@ -15,10 +15,17 @@
   "retention_mode": "COMPLIANCE",
   "readback_sha256_verified": true,
   "backup_transport_tests_passed": 12,
-  "restore_verified": false,
+  "restore_verified": true,
   "scheduled_delivery_verified": false,
   "application_restore_verified": true,
-  "restore": {
+  "schedule_observation": {
+    "checked_on": "2026-11-28",
+    "latest_scheduled_run_url": "https://github.com/amalshaaji/kanakkupro/actions/runs/45985176970",
+    "latest_scheduled_run_created_at": "2026-11-27T10:48:20Z",
+    "latest_scheduled_run_conclusion": "skipped",
+    "successful_scheduled_delivery_observed": false
+  },
+  "application_restore": {
     "status": "application_restored_and_verified",
     "started_at": "2026-11-28T08:12:48.141134+00:00",
     "finished_at": "2026-11-28T08:12:49.241560+00:00",
@@ -84,11 +91,97 @@
     "local_server_stopped": true,
     "tool_image_unmounted": true
   },
-  "schedule_observation": {
-    "checked_on": "2026-11-28",
-    "latest_scheduled_run_url": "https://github.com/amalshaaji/kanakkupro/actions/runs/45985176970",
-    "latest_scheduled_run_created_at": "2026-11-27T10:48:20Z",
-    "latest_scheduled_run_conclusion": "skipped",
-    "successful_scheduled_delivery_observed": false
+  "provider_service_recovery_verified": false,
+  "restore": {
+    "status": "restored_and_verified",
+    "started_at": "2026-11-28T08:45:37.720691+00:00",
+    "finished_at": "2026-11-28T08:45:38.754396+00:00",
+    "elapsed_seconds": 0.922,
+    "full_archive_restored": true,
+    "omitted_extensions": [],
+    "source_manifest_compared": false,
+    "same_backup_application_manifest_matches": true,
+    "plaintext_removed": true,
+    "target_cleanup_required": true,
+    "postgres_version": "18.7",
+    "critical_models_checked": 18,
+    "applied_migrations": 44,
+    "counts": {
+      "account.EmailAddress": 1,
+      "accounts.User": 1,
+      "audit.AuditEvent": 4,
+      "catalog.CatalogItem": 1,
+      "customers.Customer": 0,
+      "mfa.Authenticator": 0,
+      "payments.Payment": 0,
+      "payments.PaymentReversal": 0,
+      "sales.FinancialCommand": 0,
+      "sales.Invoice": 0,
+      "sales.InvoiceLine": 0,
+      "sales.InvoiceSequence": 0,
+      "sales.SellerProfile": 0,
+      "tenants.Invitation": 0,
+      "tenants.PilotCheck": 0,
+      "tenants.PilotFeedback": 0,
+      "tenants.Tenant": 1,
+      "tenants.TenantMembership": 1
+    },
+    "read_only_checks": {
+      "transaction_read_only": true,
+      "application_check_passed": true,
+      "extension_restored": "pg_session_jwt",
+      "extension_version": "0.5.0",
+      "synthetic_session_claim_read_passed": true,
+      "signed_jwt_validation_exercised": true,
+      "financial_guard_triggers_expected": 10,
+      "financial_guard_triggers_enabled": 10,
+      "unvalidated_constraints": 0,
+      "orphan_tenant_relations": 0,
+      "tenant_summaries_checked": 1,
+      "empty_ledger_summaries_zero": true,
+      "mail_disabled": true,
+      "multi_tenant_behavior_exercised": false,
+      "live_nonempty_financial_reconciliation": false
+    },
+    "extension_checks": {
+      "valid_synthetic_signature_accepted": true,
+      "wrong_synthetic_key_rejected": true,
+      "expired_synthetic_token_rejected": true,
+      "provider_keys_validated": false,
+      "key_material_persisted": false,
+      "transaction_read_only": true,
+      "application_manifest_unchanged": true
+    },
+    "local_server_stopped": true,
+    "tool_image_unmounted": true,
+    "extension_build": {
+      "source_url": "https://github.com/neondatabase/pg_session_jwt",
+      "source_commit": "937a79a65e596d916295d078b3a82ab421291665",
+      "version": "0.5.0",
+      "pgrx_version": "0.16.1",
+      "rust_version": "1.91.1",
+      "platform": "aarch64-apple-darwin",
+      "artifact_sha256": {
+        "library": "e27c361dcab291bf8dfa11551b8bd2890d6798436c2eaf440c66af7abe9fd832",
+        "schema": "b3023b97cc62d04302ee41b2ce4387b91822b3093cbbd627d54769631436eb6d",
+        "control": "89739fd1b368c933979bd0e054a4feb5103b8f1602b128738d7f380944ae08fa"
+      },
+      "lockfile_adjustment": "Cargo normalized only the root crate version from 0.4.0 to 0.5.0; dependency versions were unchanged.",
+      "build_flags": [
+        "--locked",
+        "--no-default-features",
+        "--features",
+        "pg18"
+      ],
+      "bindgen_sdk": "macOS SDK through BINDGEN_EXTRA_CLANG_ARGS=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+    },
+    "verifier_commit": "350effdbfaa6e11a923b87f19b66720b63e7525a",
+    "limitations": [
+      "A strict local logical archive restore is verified; Neon infrastructure, source ownership/ACLs, application secrets, MFA recovery and service cutover are not restored by this drill.",
+      "No independently captured same-snapshot source manifest exists; matching the earlier restore of the same ciphertext is not independent source equality.",
+      "Financial tables are empty; nonempty financial recovery remains covered only by separate synthetic tests.",
+      "Extension signature/expiry checks used ephemeral synthetic keys; provider JWT keys and deployed authentication were not tested.",
+      "The local restore duration excludes download, toolchain/extension build, operator access and service recovery; end-to-end RPO/RTO is not established."
+    ]
   }
 }
