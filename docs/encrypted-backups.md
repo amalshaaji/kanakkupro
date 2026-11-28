@@ -7,7 +7,9 @@ object version/size, at least thirty days of COMPLIANCE retention, and SHA-256 o
 the ciphertext downloaded back from B2. The object is 128,544 bytes. Its version
 and digest are recorded in [backup evidence](evidence/phase6-b2-backup-2026-11-28.json).
 The operator approved the specific transfer and confirmed independent recovery-key
-custody. **Provider-backed restoration and a later scheduled delivery remain open.**
+custody. Application restoration of that exact downloaded object passed locally
+with the unused Neon JWT extension explicitly omitted. **Full provider recovery
+and a later scheduled delivery remain open.**
 This adds independent daily logical copies; it does not extend Neon's six-hour
 point-in-time history.
 
@@ -95,14 +97,40 @@ and runtime alerts remain disabled. Private scratch files are removed on normal
 success and handled failure; the restored target remains for inspection and
 authorized cleanup. Errors report a fixed stage without exception text.
 
+The run-10 archive includes Neon's `pg_session_jwt` extension. The strict restore
+fails atomically on a server where that extension is unavailable. Prefer a target
+with the matching extension installed for full recovery. For an offline local
+application drill only, after confirming that neither the application nor its
+schema uses Neon JWT functions or RLS, add `--omit-neon-session-jwt`. This removes
+only the exact extension and its comment from the archive selection; it preserves
+application tables, data, constraints, functions, policies and triggers. Missing
+or ambiguous extension entries are rejected. Dependency errors still abort the
+transaction. The report explicitly returns `application_restored_and_verified`,
+`full_archive_restored: false` and the omitted extension name. Never use this
+exception as proof that Neon JWT authentication or provider recovery works.
+The selection uses PostgreSQL's documented
+[`--list` / `--use-list` mechanism](https://www.postgresql.org/docs/18/app-pgrestore.html).
+See [Neon's extension documentation](https://github.com/neondatabase/pg_session_jwt)
+for its authentication functions.
+
 Use `--expected-manifest /private/checkpoint.json` only for a checkpoint belonging
 to the same consistent source snapshot. Otherwise the result explicitly reports
 `source_manifest_compared: false`; a generated manifest alone does not establish
 source equality or financial reconciliation. Complete the business checks below.
-Eighteen local tests passed on 2026-11-28, including the actual encrypted financial
+Twenty-two local tests passed on 2026-11-28, including the actual encrypted financial
 dump/restore with an equal full manifest, hostile target/connection overrides,
 wrong digests, file substitution, target races and failure cleanup. Those tests use
-synthetic records; restoration of the live B2 object is still pending its download.
+synthetic records. The exact live B2 object also passed isolated application
+recovery on 2026-11-28 at 13:42:49 Asia/Kolkata with the extension exception above.
+All 44 migrations and ten financial/audit guard triggers were present. Eighteen
+critical models were read; the financial tables were empty. The read-only tenant
+summary returned zero balances. The 0.927-second local restore excludes download,
+operator access and service recovery, and does not establish end-to-end RPO/RTO.
+No independent same-snapshot manifest was available for source equality. Full
+provider recovery, login/MFA, multi-tenant recovery and nonempty live financial
+reconciliation remain unverified. Safe counts and limitations are recorded in
+[the object evidence](evidence/phase6-b2-backup-2026-11-28.json); the private local
+target is retained for authorized inspection/cleanup.
 
 1. Download a specific encrypted object version from the private bucket to a trusted recovery host. Verify its SHA-256 against the successful job's reported value. Keep download credentials private.
 2. With age installed, decrypt using the separately held private identity. Use a private scratch directory and `umask 077`. For example, with local file paths only:
@@ -117,6 +145,6 @@ synthetic records; restoration of the live B2 object is still pending its downlo
 4. Run `restore_manifest --all-tenants` on the recovered database, reconcile financial/audit records, and verify tenant isolation, login/MFA, PDF and reports with an isolated application. The backup does not include an independently captured logical manifest because live writes could race a separate manifest; use the dump's consistent snapshot and known business/audit checkpoints for recovery reconciliation.
 5. Record object version, capture/restore timestamps, reconciliation and application results. Measure actual write loss and incident-to-service recovery. Remove local plaintext and dispose of the isolated target only under an authorized cleanup procedure.
 
-Local evidence: six targeted tests passed on 2026-11-26, including real PostgreSQL 18 dump, age encryption/decryption, real pg_restore and equality of the full critical-model manifest after restoring synthetic invoices, credit note, payments, reversal and audit records. The storage client was simulated; Live B2 upload/readback/retention checks have since passed in run 10; restoration of that actual object is still required. CI repeats encryption recovery with PostgreSQL 16 and age.
+Local evidence: six targeted tests passed on 2026-11-26, including real PostgreSQL 18 dump, age encryption/decryption, real pg_restore and equality of the full critical-model manifest after restoring synthetic invoices, credit note, payments, reversal and audit records. The storage client was simulated. Live B2 upload/readback/retention and the explicitly limited application recovery described above have since passed. CI repeats encryption recovery with PostgreSQL 16 and age.
 
 Sources: [age](https://github.com/FiloSottile/age), [PostgreSQL Ubuntu packages](https://www.postgresql.org/download/linux/ubuntu/), [Backblaze pricing](https://www.backblaze.com/cloud-storage/pricing), [B2 key capabilities](https://www.backblaze.com/docs/cloud-storage-application-key-capabilities).

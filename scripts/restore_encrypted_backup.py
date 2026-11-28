@@ -17,6 +17,24 @@ from scripts.encrypted_backup import MAX_FILE_BYTES
 from scripts.restore_drill import assert_empty_target, client_env, run, snapshot
 
 
+def omit_neon_jwt_entries(listing):
+    """Omit only the optional provider extension and its comment, never app data."""
+    kept, omitted = [], []
+    for line in listing.splitlines(keepends=True):
+        match = re.fullmatch(
+            r"\d+; \d+ \d+ (EXTENSION -|COMMENT - EXTENSION) "
+            r"pg_session_jwt\s*",
+            line,
+        )
+        if match:
+            omitted.append(match[1])
+        else:
+            kept.append(line)
+    if omitted.count("EXTENSION -") != 1 or omitted.count("COMMENT - EXTENSION") > 1:
+        raise ValueError("Archive must contain exactly one Neon JWT extension entry.")
+    return "".join(kept)
+
+
 def guard_target(url, env):
     params = conninfo_to_dict(url)
     if params.get("host") not in {"127.0.0.1", "::1", "localhost"} or not re.fullmatch(
@@ -50,6 +68,7 @@ def restore_encrypted(
     pg_bin="",
     age_bin="age",
     expected_manifest=None,
+    omit_neon_session_jwt=False,
     report=lambda stage: None,
 ):
     started = time.monotonic()
@@ -103,7 +122,15 @@ def restore_encrypted(
             minimal,
         )
         report("archive_validation")
-        run([pg_restore, "--list", str(plain)], minimal)
+        listing = run([pg_restore, "--list", str(plain)], minimal)
+        selection = []
+        if omit_neon_session_jwt:
+            # Explicit offline application recovery only. No dependency or RLS
+            # objects are skipped; any dependency error still aborts atomically.
+            selected = Path(folder) / "restore.list"
+            selected.touch(mode=0o600)
+            selected.write_text(omit_neon_jwt_entries(listing))
+            selection = ["--use-list", str(selected)]
         # Recheck immediately before the transactional restore. Never use --clean.
         assert_empty_target(target)
         report("database_restore")
@@ -114,6 +141,7 @@ def restore_encrypted(
                 "--single-transaction",
                 "--no-owner",
                 "--no-privileges",
+                *selection,
                 "--dbname",
                 params["dbname"],
                 str(plain),
@@ -127,7 +155,13 @@ def restore_encrypted(
         if expected_manifest is not None and restored != expected_manifest:
             raise ValueError("Restored manifest differs from the supplied checkpoint.")
     return {
-        "status": "restored_and_verified",
+        "status": (
+            "application_restored_and_verified"
+            if omit_neon_session_jwt
+            else "restored_and_verified"
+        ),
+        "full_archive_restored": not omit_neon_session_jwt,
+        "omitted_extensions": ["pg_session_jwt"] if omit_neon_session_jwt else [],
         "ciphertext_sha256": actual,
         "elapsed_seconds": round(time.monotonic() - started, 3),
         "manifest": restored,
@@ -146,6 +180,15 @@ def main():
     parser.add_argument("--expected-manifest")
     parser.add_argument("--pg-bin", default="")
     parser.add_argument("--age-bin", default="age")
+    parser.add_argument(
+        "--omit-neon-session-jwt",
+        action="store_true",
+        help=(
+            "Offline application recovery only: omit pg_session_jwt and its "
+            "comment after confirming the app does not use Neon JWT/RLS. "
+            "This does not verify full provider/authentication recovery."
+        ),
+    )
     args = parser.parse_args()
     stage = "input_validation"
 
@@ -168,6 +211,7 @@ def main():
             pg_bin=args.pg_bin,
             age_bin=args.age_bin,
             expected_manifest=expected,
+            omit_neon_session_jwt=args.omit_neon_session_jwt,
             report=report,
         )
         print(json.dumps(result, sort_keys=True))

@@ -4,10 +4,20 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from scripts.restore_encrypted_backup import guard_target, main, restore_encrypted
+from scripts.restore_encrypted_backup import (
+    guard_target,
+    main,
+    omit_neon_jwt_entries,
+    restore_encrypted,
+)
 
 TARGET = "postgresql://operator:private@127.0.0.1:55432/test_restore_" + "a" * 32
 MANIFEST = {"version": 1, "tables": {"sales.Invoice": {"count": 2}}}
+NEON_TOC = (
+    "; archive header\n"
+    "2; 3079 24597 EXTENSION - pg_session_jwt \n"
+    "3885; 0 0 COMMENT - EXTENSION pg_session_jwt \n"
+)
 
 
 @pytest.fixture
@@ -141,9 +151,12 @@ def test_success_restores_verified_bytes_offline_and_removes_plaintext(
         )
     assert verify_empty.call_count == 2
     assert result["status"] == "restored_and_verified"
+    assert result["full_archive_restored"] is True
+    assert result["omitted_extensions"] == []
     assert result["source_manifest_compared"] is (expected is not None)
     assert result["target_cleanup_required"] is True
     assert any("--single-transaction" in args for args in commands)
+    assert all("--use-list" not in args for args in commands)
     assert any("--check" in args for args in commands)
     assert all(not path.exists() and not path.parent.exists() for path in plain_paths)
     assert identity.read_text() == "synthetic-private-identity"
@@ -241,3 +254,55 @@ def test_cli_failure_never_prints_exception_or_credentials(recovery_files, capsy
     output = capsys.readouterr()
     assert "input_validation" in output.err
     assert "private-credential" not in output.out + output.err
+
+
+def test_neon_selection_preserves_application_security_and_similarly_named_data():
+    application = (
+        "5; 1259 42 TABLE public pg_session_jwt_log operator\n"
+        "6; 0 42 TABLE DATA public pg_session_jwt_log operator\n"
+        "7; 3256 43 POLICY public tenant_policy operator\n"
+        "8; 1255 44 FUNCTION public check_tenant() operator\n"
+    )
+    assert omit_neon_jwt_entries(NEON_TOC + application) == (
+        "; archive header\n" + application
+    )
+
+
+@pytest.mark.parametrize("listing", ["", NEON_TOC + NEON_TOC])
+def test_neon_selection_refuses_absent_or_ambiguous_extension(listing):
+    with pytest.raises(ValueError, match="exactly one"):
+        omit_neon_jwt_entries(listing)
+
+
+def test_neon_omission_is_explicit_private_and_reported_as_partial(recovery_files):
+    encrypted, identity, digest = recovery_files
+    selection_paths = []
+
+    def command(args, env):
+        if "--list" in args:
+            return NEON_TOC + "5; 1259 42 TABLE public invoice operator\n"
+        if "--single-transaction" in args:
+            selection = Path(args[args.index("--use-list") + 1])
+            assert selection.stat().st_mode & 0o777 == 0o600
+            assert "TABLE public invoice" in selection.read_text()
+            assert "EXTENSION" not in selection.read_text()
+            assert "--exit-on-error" in args and "--clean" not in args
+            selection_paths.append(selection)
+        return ""
+
+    with (
+        patch("scripts.restore_encrypted_backup.assert_empty_target"),
+        patch("scripts.restore_encrypted_backup.run", side_effect=command),
+        patch("scripts.restore_encrypted_backup.snapshot", return_value=MANIFEST),
+    ):
+        result = restore_encrypted(
+            {"RESTORE_DATABASE_URL": TARGET},
+            encrypted,
+            identity,
+            digest,
+            omit_neon_session_jwt=True,
+        )
+    assert result["status"] == "application_restored_and_verified"
+    assert result["full_archive_restored"] is False
+    assert result["omitted_extensions"] == ["pg_session_jwt"]
+    assert len(selection_paths) == 1 and not selection_paths[0].exists()

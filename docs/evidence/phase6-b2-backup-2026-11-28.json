@@ -16,5 +16,70 @@
   "readback_sha256_verified": true,
   "backup_transport_tests_passed": 12,
   "restore_verified": false,
-  "scheduled_delivery_verified": false
+  "scheduled_delivery_verified": false,
+  "application_restore_verified": true,
+  "restore": {
+    "status": "application_restored_and_verified",
+    "started_at": "2026-11-28T08:12:48.141134+00:00",
+    "finished_at": "2026-11-28T08:12:49.241560+00:00",
+    "elapsed_seconds": 0.927,
+    "full_archive_restored": false,
+    "omitted_extensions": [
+      "pg_session_jwt"
+    ],
+    "source_manifest_compared": false,
+    "plaintext_removed": true,
+    "target_cleanup_required": true,
+    "postgres_major": 18,
+    "critical_models_checked": 18,
+    "applied_migrations": 44,
+    "counts": {
+      "account.EmailAddress": 1,
+      "accounts.User": 1,
+      "audit.AuditEvent": 4,
+      "catalog.CatalogItem": 1,
+      "customers.Customer": 0,
+      "mfa.Authenticator": 0,
+      "payments.Payment": 0,
+      "payments.PaymentReversal": 0,
+      "sales.FinancialCommand": 0,
+      "sales.Invoice": 0,
+      "sales.InvoiceLine": 0,
+      "sales.InvoiceSequence": 0,
+      "sales.SellerProfile": 0,
+      "tenants.Invitation": 0,
+      "tenants.PilotCheck": 0,
+      "tenants.PilotFeedback": 0,
+      "tenants.Tenant": 1,
+      "tenants.TenantMembership": 1
+    },
+    "read_only_checks": {
+      "transaction_read_only": true,
+      "application_check_passed": true,
+      "financial_guard_triggers_expected": 10,
+      "financial_guard_triggers_enabled": 10,
+      "unvalidated_constraints": 0,
+      "orphan_tenant_relations": 0,
+      "tenant_summaries_checked": 1,
+      "empty_ledger_summaries_zero": true,
+      "mail_disabled": true,
+      "multi_tenant_behavior_exercised": false,
+      "live_nonempty_financial_reconciliation": false
+    },
+    "safeguard_tests_passed": 20,
+    "real_synthetic_financial_restore_tests_passed": 2,
+    "limitations": [
+      "Neon pg_session_jwt extension and its comment omitted explicitly; full provider/authentication recovery is not verified.",
+      "The source backup has no independent same-snapshot manifest; generated recovered digests do not prove source equality.",
+      "Live financial tables are empty; nonempty ledger reconciliation is exercised only with synthetic test data.",
+      "Local restore duration excludes download, operator access, application deployment and service recovery; end-to-end RPO/RTO is not established."
+    ]
+  },
+  "schedule_observation": {
+    "checked_on": "2026-11-28",
+    "latest_scheduled_run_url": "https://github.com/amalshaaji/kanakkupro/actions/runs/45985176970",
+    "latest_scheduled_run_created_at": "2026-11-27T10:48:20Z",
+    "latest_scheduled_run_conclusion": "skipped",
+    "successful_scheduled_delivery_observed": false
+  }
 }

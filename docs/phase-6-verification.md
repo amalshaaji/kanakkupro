@@ -165,22 +165,46 @@ and confirmed a recovery-key copy outside this project on 2026-11-27. The enable
 flag is saved. The [live encrypted upload](https://github.com/amalshaaji/kanakkupro/actions/runs/46057506524)
 passed on 2026-11-28, including version/size, 30-day COMPLIANCE retention and SHA-256
 readback. See [object evidence](evidence/phase6-b2-backup-2026-11-28.json).
-Provider-backed restore and a later scheduled delivery remain open in
-[the backup runbook](encrypted-backups.md).
+Application recovery of that exact B2 object is now verified with the explicit
+provider-extension exception below. Full provider recovery and a later scheduled
+delivery remain open in [the backup runbook](encrypted-backups.md).
 
 On 2026-11-28 the isolated encrypted-file restore verifier passed sixteen safeguard
 tests and both real PostgreSQL recovery tests. It verifies the downloaded digest,
 restores only into an empty local drill database, checks migrations and generates
 the financial/audit manifest with mail disabled. The full financial fixture
-manifest matched after actual age decryption and restoration. The live B2 object
-has not yet been downloaded for this verifier; its recovery gate remains open.
+manifest matched after actual age decryption and restoration.
 [CI for the restore verifier](https://github.com/amalshaaji/kanakkupro/actions/runs/46059228932)
 passed backend checks, native build and desktop/mobile review for commit `7fc25da`.
 
+The authenticated B2 download matched the run-10 ciphertext SHA-256 and size.
+The first strict restore failed atomically because local PostgreSQL lacks Neon's
+`pg_session_jwt` extension; the target remained empty. Code and recovered schema
+inspection found no Neon JWT function use, RLS policies or enabled row security.
+The explicit `--omit-neon-session-jwt` option then omitted only its extension and
+comment entries, preserving all application objects and data. It reports
+`application_restored_and_verified` and `full_archive_restored: false`; this is
+not evidence of full provider/authentication recovery.
+
+On 2026-11-28 at 13:42:49 Asia/Kolkata, this application restore passed migration
+checks (44 applied migrations) and generated the 18-model manifest. It took
+0.927 seconds after local input validation; download, operator access and service
+recovery are excluded. A read-only transaction confirmed all ten expected
+financial/audit guard triggers enabled, no unvalidated public constraints, no
+orphaned checked tenant relations and a zero-balance summary for the one tenant.
+Mail was disabled. There are four audit records, but no invoices, payments or
+reversals. No independent same-snapshot source manifest exists, so source equality,
+nonempty live financial reconciliation, multi-tenant recovery behavior and
+end-to-end RPO/RTO are not established. Twenty safeguard tests and both real
+synthetic financial restore tests passed after the compatibility change.
+The private restored database is retained for authorized inspection/cleanup.
+
 ## Remaining operator gates
 
-- Restore the verified B2 object into an isolated database and prove a later
-  scheduled run. Transfer, separate key custody and manual upload/readback are confirmed.
+- Verify full provider recovery with `pg_session_jwt` available, and prove a later
+  scheduled run. The exact B2 object's isolated application restore is verified.
+  The 2026-11-28 schedule check still showed only the earlier skipped scheduled run;
+  successful scheduled delivery remains unobserved.
 - Resolve alert inbox placement; the approved runtime probe arrived in Gmail Spam.
 - Verify real password-reset/invitation delivery and inbox placement.
 - Verify deployed platform-admin MFA/recovery, credential replacement and least
