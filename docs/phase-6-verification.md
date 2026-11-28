@@ -197,7 +197,10 @@ reversals. No independent same-snapshot source manifest exists, so source equali
 nonempty live financial reconciliation, multi-tenant recovery behavior and
 end-to-end RPO/RTO are not established. Twenty safeguard tests and both real
 synthetic financial restore tests passed after the compatibility change.
-The private restored database is retained for authorized inspection/cleanup.
+[CI for the live-backup recovery change](https://github.com/amalshaaji/kanakkupro/actions/runs/46124918571)
+passed backend checks, native build and desktop/mobile review for commit `e8ffd33`.
+The private restored database is retained for authorized inspection/cleanup; the
+local server is stopped and the read-only tool image is unmounted.
 
 ## Remaining operator gates
 

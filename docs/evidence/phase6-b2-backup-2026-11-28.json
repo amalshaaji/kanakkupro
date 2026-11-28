@@ -73,7 +73,16 @@
       "The source backup has no independent same-snapshot manifest; generated recovered digests do not prove source equality.",
       "Live financial tables are empty; nonempty ledger reconciliation is exercised only with synthetic test data.",
       "Local restore duration excludes download, operator access, application deployment and service recovery; end-to-end RPO/RTO is not established."
-    ]
+    ],
+    "verification_commit": "e8ffd331cd1027fd8330b55f2f3756a056284d93",
+    "ci": {
+      "url": "https://github.com/amalshaaji/kanakkupro/actions/runs/46124918571",
+      "checks": "success",
+      "native-build": "success",
+      "pilot-review": "success"
+    },
+    "local_server_stopped": true,
+    "tool_image_unmounted": true
   },
   "schedule_observation": {
     "checked_on": "2026-11-28",
