@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - scripts/check_service.py
+      - scripts/check_backup_freshness.py
       - .github/workflows/availability.yml
   workflow_dispatch:
   schedule:
@@ -11,6 +12,22 @@ on:
 permissions:
   contents: read
 jobs:
+  backup-freshness:
+    if: vars.BACKUPS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check verified backup age
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m scripts.check_backup_freshness
   readiness:
     runs-on: ubuntu-latest
     timeout-minutes: 6

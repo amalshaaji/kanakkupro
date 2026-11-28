@@ -1,6 +1,6 @@
 # Production Operations Readiness
 
-This runbook records the operational controls required before a KankkuPro pilot. The preview deployment uses native Python on Render, Neon PostgreSQL, and Brevo SMTP. Neon Free six-hour history, an isolated point-in-time branch drill and the hardening release checks passed. The runtime alert probe reached Gmail Spam. On 2026-11-28 manual backup run 10 verified encrypted B2 upload, readback and protected retention. Restoring that object and observing a later scheduled backup remain open. See [encrypted backups](encrypted-backups.md) for evidence and the recovery procedure.
+This runbook records the operational controls required before a KankkuPro pilot. The preview deployment uses native Python on Render, Neon PostgreSQL, and Brevo SMTP. Neon Free six-hour history, an isolated point-in-time branch drill and the hardening release checks passed. The runtime alert probe reached Gmail Spam. On 2026-11-28 manual backup run 10 verified encrypted B2 upload, readback and protected retention. Application recovery of that exact object passed with the unused Neon JWT extension explicitly omitted. Full provider recovery and a later scheduled backup remain open. See [encrypted backups](encrypted-backups.md) for evidence and the recovery procedure.
 
 ## Current application controls
 
@@ -50,7 +50,7 @@ A production owner must complete and record this drill after selecting the datab
 5. Verify schema migration state and reconcile tenant, customer, invoice, and payment totals when those financial modules are implemented.
 6. Remove the isolated restored database and record who performed and reviewed the drill.
 
-Do not put production connection strings, credentials, or customer exports in this repository or in CI logs. The prepared daily encrypted B2 workflow and recovery procedure are documented in [encrypted backups](encrypted-backups.md); live activation and a provider-backed encrypted restore remain required.
+Do not put production connection strings, credentials, or customer exports in this repository or in CI logs. The enabled daily encrypted B2 workflow and explicitly limited application recovery are documented in [encrypted backups](encrypted-backups.md); full provider recovery and successful scheduled delivery remain required.
 
 ## Incident response
 
@@ -85,6 +85,24 @@ Do not put production connection strings, credentials, or customer exports in th
 
 The `Availability check` GitHub Actions workflow checks the public readiness endpoint every 30 minutes and supports manual execution. Configure GitHub workflow-failure notifications and verify delivery to the operator. Scheduling can be delayed; this is a baseline availability check, not a real-time error-monitoring service or an availability SLO measurement. Do not deliberately fail the production service to test it; use a controlled test URL or test workflow.
 
+When `BACKUPS_ENABLED=true`, a separate job in that workflow checks the age of
+the latest successful backup upload using read-only GitHub Actions metadata. It
+requires the backup's actual **Encrypt and upload backup** step to have passed
+in a successful main-branch workflow run's current attempt. Storage-only checks,
+skipped upload steps and failed runs do not refresh the signal. A manual backup
+can establish freshness, but does not prove scheduled delivery. The age uses the
+upload step's start, before the database dump, rather than its completion time.
+Older than 24 hours, no qualifying upload in the latest 20 successful runs, or an
+API/verification failure fails the job through existing workflow notifications.
+Readiness failure cannot skip this independent job. No database/B2 credentials or
+customer data are supplied to the monitor.
+
+This checks the uploader's recorded success, not current object accessibility,
+key recovery or restored financial correctness. Both workflows share GitHub's
+best-effort scheduler: a GitHub-wide outage or dropped monitor run can prevent
+notification. Keep an independent operator freshness review until a separate
+monitoring service and its routing are approved. No 24-hour RPO is guaranteed.
+
 For a read-only SMTP diagnosis, run `python manage.py check_email_transport` in a trusted deployment environment. It checks TLS/authentication without sending mail or printing credentials. Inbox delivery still requires a separate authorized test.
 
 SMTP transport/authentication failures return a private 503 recovery page with a request ID. Logs record only a safe failure category, never SMTP response text or credentials. Email attempts have a 15-second timeout. Account verification is not bypassed. Invitations already committed before delivery failure remain pending; revoke and recreate an undelivered invitation after the provider is fixed. No durable automatic retry queue is claimed.
@@ -96,8 +114,9 @@ alerts are enabled; the approved probe reached Gmail but was classified as Spam.
 Scheduled availability checks have passed. B2 credentials passed read-only storage
 checks, and the operator approved the specific backup transfer and confirmed
 independent key custody. Backups are enabled, and manual run 10 verified live encrypted upload, version/size,
-SHA-256 readback and 30-day COMPLIANCE retention on 2026-11-28. Provider-backed
-restoration and a later scheduled delivery remain open.
+SHA-256 readback and 30-day COMPLIANCE retention on 2026-11-28. The exact object
+passed isolated application recovery with the unused Neon JWT extension omitted;
+full provider recovery and a later scheduled delivery remain open.
 Local and CI two-tenant HTTP/PDF workloads passed. Public post-release readiness
 returned 200 in 21.54 seconds after an earlier 30-second timeout; deployed latency
 and cold-start objectives remain open. See [Phase 6 verification](phase-6-verification.md).

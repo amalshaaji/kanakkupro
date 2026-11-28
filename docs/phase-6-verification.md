@@ -202,6 +202,25 @@ passed backend checks, native build and desktop/mobile review for commit `e8ffd3
 The private restored database is retained for authorized inspection/cleanup; the
 local server is stopped and the read-only tool image is unmounted.
 
+## Backup freshness monitoring
+
+On 2026-11-28 a read-only check of actual GitHub metadata identified manual run
+10 as the latest verified upload, with its upload step starting at
+2026-11-27 19:33:43 UTC. Its age was below the 24-hour alert threshold. The
+workflow remains active, but the latest scheduled record is still the earlier
+skipped run; successful scheduled delivery is not established.
+
+The existing availability workflow now checks backup freshness in a separate job
+when backups are enabled. It uses only a read-only Actions token and requires a
+successful upload step in the current attempt of a successful main-branch backup
+run. Twenty-three offline tests passed, including missed/stale backups,
+storage-only checks, failed/skipped steps, reruns, timestamp validation and private
+failure output. An older-than-24-hour upload, no qualifying upload within the
+bounded history, or unavailable verification fails the monitoring job. This does
+not prove B2's current accessibility or restoration, and the shared GitHub
+scheduler can delay/drop either workflow. Independent monitoring and actual
+failure-notification delivery remain operator gates.
+
 ## Remaining operator gates
 
 - Verify full provider recovery with `pg_session_jwt` available, and prove a later

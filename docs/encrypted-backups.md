@@ -42,6 +42,15 @@ and confirmed the private recovery key is saved separately on 2026-11-27.
 
 The workflow `.github/workflows/backup.yml` uses native Python/age/PostgreSQL clients on a GitHub-hosted Ubuntu runner, without Docker. Scheduling is gated by `BACKUPS_ENABLED=true` and the main branch. It runs daily at 02:17 UTC (07:47 Asia/Kolkata), plus a manual dispatch. GitHub schedules are best effort; review failures and freshness. Daily cadence alone is not a guaranteed 24-hour RPO.
 
+The existing availability workflow now includes an independent backup-freshness
+job when backups are enabled. It reads only GitHub Actions metadata, requires a
+successful upload step in the current run attempt, and fails for an upload older
+than 24 hours or unavailable verification. Storage-only checks do not count.
+See [monitor behavior and shared-scheduler limitations](operations.md#monitoring-and-email-recovery).
+GitHub documents that scheduled events can be
+[delayed or dropped](https://docs.github.com/en/actions/how-tos/troubleshoot-workflows);
+the freshness job does not turn scheduling into a delivery guarantee.
+
 1. Review/approve the new backup credential and the transfer of the Neon connection secret to GitHub Actions. Use a bucket-restricted application key, not a master key. A prepared web form selects only this bucket, read/write access and a 90-day expiry. The standard UI preset can include deletion capabilities; compliance retention blocks early deletion and this job never invokes deletion. Prefer a custom API-created key with only `listBuckets`, `readBuckets`, `listFiles`, `readFiles`, `writeFiles`, `readBucketRetentions`, and `readFileRetentions` if an authorized operator can provision it. No all-bucket listing is required. Review renewal before the key expires.
 2. In repository `amalshaaji/kanakkupro`, create a GitHub Actions environment named `backups` restricted to main. Store these environment secrets privately:
    - `BACKUP_DATABASE_URL`: current TLS-protected Neon source URL, ideally a dedicated read-only backup role able to dump all required tables. Never reuse an exposed old password.
